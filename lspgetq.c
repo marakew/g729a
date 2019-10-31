@@ -240,7 +240,7 @@ static void lsp_stability(
 
    if( buf[0] < L_LIMIT ) {
       buf[0] = L_LIMIT;
-      printf("warning LSP Low \n");
+      //printf("warning LSP Low \n");
    }
    for(j=0; j<M-1; j++) {
       diff = buf[j+1] - buf[j];
@@ -250,7 +250,7 @@ static void lsp_stability(
    }
    if( buf[M-1] > M_LIMIT ) {
       buf[M-1] = M_LIMIT;
-      printf("warning LSP High \n");
+      //printf("warning LSP High \n");
    }
    return;
 }
