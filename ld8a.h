@@ -517,8 +517,3 @@ void copy(
 );
 INT16 random_g729(void);
 
-void fwrite16(
- FLOAT *data,           /* input: inputdata            */
- int length,            /* input: length of data array */
- FILE *fp               /* input: file pointer         */
-);
