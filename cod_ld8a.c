@@ -70,34 +70,13 @@
  *         Static memory allocation.                      *
  *--------------------------------------------------------*/
 
-        /* Speech vector */
-
- static FLOAT old_speech[L_TOTAL];
- static FLOAT *speech, *p_window;
- FLOAT *new_speech;                    /* Global variable */
-
-        /* Weighted speech vector */
-
- static FLOAT old_wsp[L_FRAME+PIT_MAX];
- static FLOAT *wsp;
-
-        /* Excitation vector */
-
- static FLOAT old_exc[L_FRAME+PIT_MAX+L_INTERPOL];
- static FLOAT *exc;
-
         /* LSP Line spectral frequencies */
 
  static FLOAT lsp_old[M] =
      { (F)0.9595,  (F)0.8413,  (F)0.6549,  (F)0.4154,  (F)0.1423,
       (F)-0.1423, (F)-0.4154, (F)-0.6549, (F)-0.8413, (F)-0.9595};
 
- static FLOAT lsp_old_q[M];
-
-        /* Filter's memory */
-
- static FLOAT  mem_w0[M], mem_w[M], mem_zero[M];
- static FLOAT  sharp;
+ static FLOAT past_qua_en[4]={(F)-14.0,(F)-14.0,(F)-14.0,(F)-14.0};
 
 /*-----------------------------------------------------------------*
  *   Function  init_coder_ld8a                                     *
@@ -111,7 +90,7 @@
  *       - set static vectors to zero                              *
  *-----------------------------------------------------------------*/
 
-void init_coder_ld8a(void)
+void init_coder_ld8a(encoder_state *state)
 {
 
   /*----------------------------------------------------------------------*
@@ -130,30 +109,32 @@ void init_coder_ld8a(void)
   *                             new_speech                                *
   *-----------------------------------------------------------------------*/
 
-   new_speech = old_speech + L_TOTAL - L_FRAME;         /* New speech     */
-   speech     = new_speech - L_NEXT;                    /* Present frame  */
-   p_window   = old_speech + L_TOTAL - L_WINDOW;        /* For LPC window */
+   state->new_speech = state->old_speech + L_TOTAL - L_FRAME;         /* New speech     */
+   state->speech     = state->new_speech - L_NEXT;                    /* Present frame  */
+   state->p_window   = state->old_speech + L_TOTAL - L_WINDOW;        /* For LPC window */
 
    /* Initialize static pointers */
 
-   wsp    = old_wsp + PIT_MAX;
-   exc    = old_exc + PIT_MAX + L_INTERPOL;
+   state->wsp    = state->old_wsp + PIT_MAX;
+   state->exc    = state->old_exc + PIT_MAX + L_INTERPOL;
 
    /* Static vectors to zero */
 
-   set_zero(old_speech, L_TOTAL);
-   set_zero(old_exc, PIT_MAX+L_INTERPOL);
-   set_zero(old_wsp, PIT_MAX);
-   set_zero(mem_w,   M);
-   set_zero(mem_w0,  M);
-   set_zero(mem_zero, M);
-   sharp = SHARPMIN;
+   set_zero(state->old_speech, L_TOTAL);
+   set_zero(state->old_exc, PIT_MAX+L_INTERPOL);
+   set_zero(state->old_wsp, PIT_MAX);
+   set_zero(state->mem_w,   M);
+   set_zero(state->mem_w0,  M);
+   set_zero(state->mem_zero, M);
+   state->sharp = SHARPMIN;
 
-   copy(lsp_old, lsp_old_q, M);
+   copy(lsp_old, state->lsp_old, M);
+   copy(state->lsp_old, state->lsp_old_q, M);
 
-   lsp_encw_reset() ;
-   init_exc_err();
+   lsp_encw_reset(&state->lsp_enc);
+   init_exc_err(state->exc_err);
 
+   copy(past_qua_en, state->past_qua_en, M);
    return;
 }
 
@@ -176,7 +157,7 @@ void init_coder_ld8a(void)
  *                                                                 *
  *-----------------------------------------------------------------*/
 
-void coder_ld8a(
+void coder_ld8a(encoder_state *state,
  int ana[]                   /* output: analysis parameters */
 )
 {
@@ -223,14 +204,14 @@ void coder_ld8a(
 
      /* LP analysis */
 
-     autocorr(p_window, M, r);             /* Autocorrelations */
+     autocorr(state->p_window, M, r);             /* Autocorrelations */
      lag_window(M, r);                     /* Lag windowing    */
      levinson(r, Ap_t, rc);                /* Levinson Durbin  */
-     az_lsp(Ap_t, lsp_new, lsp_old);       /* Convert A(z) to lsp */
+     az_lsp(Ap_t, lsp_new, state->lsp_old);       /* Convert A(z) to lsp */
 
      /* LSP quantization */
 
-     qua_lsp(lsp_new, lsp_new_q, ana);
+     qua_lsp(&state->lsp_enc, lsp_new, lsp_new_q, ana);
      ana += 2;                        /* Advance analysis parameters pointer */
 
     /*--------------------------------------------------------------------*
@@ -238,7 +219,7 @@ void coder_ld8a(
      * The interpolated parameters are in array Aq_t[].                   *
      *--------------------------------------------------------------------*/
 
-    int_qlpc(lsp_old_q, lsp_new_q, Aq_t);
+    int_qlpc(state->lsp_old_q, lsp_new_q, Aq_t);
 
     /* Compute A(z/gamma) */
 
@@ -247,8 +228,8 @@ void coder_ld8a(
 
     /* update the LSPs for the next frame */
 
-    copy(lsp_new,   lsp_old,   M);
-    copy(lsp_new_q, lsp_old_q, M);
+    copy(lsp_new,   state->lsp_old,   M);
+    copy(lsp_new_q, state->lsp_old_q, M);
   }
 
    /*----------------------------------------------------------------------*
@@ -257,8 +238,8 @@ void coder_ld8a(
     * - Set the range for searching closed-loop pitch in 1st subframe      *
     *----------------------------------------------------------------------*/
 
-   residu(&Aq_t[0],   &speech[0],       &exc[0],       L_SUBFR);
-   residu(&Aq_t[MP1], &speech[L_SUBFR], &exc[L_SUBFR], L_SUBFR);
+   residu(&Aq_t[0],   &state->speech[0],       &state->exc[0],       L_SUBFR);
+   residu(&Aq_t[MP1], &state->speech[L_SUBFR], &state->exc[L_SUBFR], L_SUBFR);
 
   {
      FLOAT Ap1[MP1];
@@ -267,18 +248,18 @@ void coder_ld8a(
      Ap1[0] = (F)1.0;
      for(i=1; i<=M; i++)
        Ap1[i] = Ap[i] - (F)0.7 * Ap[i-1];
-     syn_filt(Ap1, &exc[0], &wsp[0], L_SUBFR, mem_w, 1);
+     syn_filt(Ap1, &state->exc[0], &state->wsp[0], L_SUBFR, state->mem_w, 1);
 
      Ap += MP1;
      for(i=1; i<=M; i++)
        Ap1[i] = Ap[i] - (F)0.7 * Ap[i-1];
-     syn_filt(Ap1, &exc[L_SUBFR], &wsp[L_SUBFR], L_SUBFR, mem_w, 1);
+     syn_filt(Ap1, &state->exc[L_SUBFR], &state->wsp[L_SUBFR], L_SUBFR, state->mem_w, 1);
    }
 
 
    /* Find open loop pitch lag for whole speech frame */
 
-   T_op = pitch_ol_fast(wsp, L_FRAME);
+   T_op = pitch_ol_fast(state->wsp, L_FRAME);
 
    /* Range for closed loop pitch search in 1st subframe */
 
@@ -325,13 +306,13 @@ void coder_ld8a(
        * Find the target vector for pitch search:      *
        *----------------------------------------------*/
 
-      syn_filt(Ap, &exc[i_subfr], xn, L_SUBFR, mem_w0, 0);
+      syn_filt(Ap, &state->exc[i_subfr], xn, L_SUBFR, state->mem_w0, 0);
 
       /*-----------------------------------------------------------------*
        *    Closed-loop fractional pitch search                          *
        *-----------------------------------------------------------------*/
 
-      T0 = pitch_fr3_fast(&exc[i_subfr], xn, h1, L_SUBFR, T0_min, T0_max,
+      T0 = pitch_fr3_fast(&state->exc[i_subfr], xn, h1, L_SUBFR, T0_min, T0_max,
                     i_subfr, &T0_frac);
 
       index = enc_lag3(T0, T0_frac, &T0_min, &T0_max, PIT_MIN, PIT_MAX,
@@ -349,13 +330,13 @@ void coder_ld8a(
        *   - find LTP residual.                                          *
        *-----------------------------------------------------------------*/
 
-      syn_filt(Ap, &exc[i_subfr], y1, L_SUBFR, mem_zero, 0);
+      syn_filt(Ap, &state->exc[i_subfr], y1, L_SUBFR, state->mem_zero, 0);
 
       gain_pit = g_pitch(xn, y1, g_coeff, L_SUBFR);
 
       /* clip pitch gain if taming is necessary */
 
-      taming = test_err(T0, T0_frac);
+      taming = test_err(state->exc_err, T0, T0_frac);
 
       if( taming == 1){
         if (gain_pit > GPCLIP) {
@@ -370,7 +351,7 @@ void coder_ld8a(
        * - Innovative codebook search.                       *
        *-----------------------------------------------------*/
 
-      index = ACELP_code_A(xn2, h1, T0, sharp, code, y2, &i);
+      index = ACELP_code_A(xn2, h1, T0, state->sharp, code, y2, &i);
 
       *ana++ = index;           /* Positions index */
       *ana++ = i;               /* Signs index     */
@@ -381,16 +362,16 @@ void coder_ld8a(
        *------------------------------------------------------*/
 
       corr_xy2(xn, y1, y2, g_coeff);
-       *ana++ =qua_gain(code, g_coeff, L_SUBFR, &gain_pit, &gain_code,
+       *ana++ =qua_gain(state->past_qua_en, code, g_coeff, L_SUBFR, &gain_pit, &gain_code,
                                     taming);
 
       /*------------------------------------------------------------*
        * - Update pitch sharpening "sharp" with quantized gain_pit  *
        *------------------------------------------------------------*/
 
-      sharp = gain_pit;
-      if (sharp > SHARPMAX) sharp = SHARPMAX;
-      if (sharp < SHARPMIN) sharp = SHARPMIN;
+      state->sharp = gain_pit;
+      if (state->sharp > SHARPMAX) state->sharp = SHARPMAX;
+      if (state->sharp < SHARPMIN) state->sharp = SHARPMIN;
 
       /*------------------------------------------------------*
        * - Find the total excitation                          *
@@ -399,12 +380,12 @@ void coder_ld8a(
        *------------------------------------------------------*/
 
       for (i = 0; i < L_SUBFR;  i++)
-        exc[i+i_subfr] = gain_pit*exc[i+i_subfr] + gain_code*code[i];
+        state->exc[i+i_subfr] = gain_pit*state->exc[i+i_subfr] + gain_code*code[i];
 
-      update_exc_err(gain_pit, T0);
+      update_exc_err(state->exc_err, gain_pit, T0);
 
       for (i = L_SUBFR-M, j = 0; i < L_SUBFR; i++, j++)
-        mem_w0[j]  = xn[i] - gain_pit*y1[i] - gain_code*y2[i];
+        state->mem_w0[j]  = xn[i] - gain_pit*y1[i] - gain_code*y2[i];
 
       Aq += MP1;           /* interpolated LPC parameters for next subframe */
       Ap += MP1;
@@ -416,9 +397,9 @@ void coder_ld8a(
     *     speech[], wsp[] and  exc[]                   *
     *--------------------------------------------------*/
 
-   copy(&old_speech[L_FRAME], &old_speech[0], L_TOTAL-L_FRAME);
-   copy(&old_wsp[L_FRAME], &old_wsp[0], PIT_MAX);
-   copy(&old_exc[L_FRAME], &old_exc[0], PIT_MAX+L_INTERPOL);
+   copy(&state->old_speech[L_FRAME], &state->old_speech[0], L_TOTAL-L_FRAME);
+   copy(&state->old_wsp[L_FRAME], &state->old_wsp[0], PIT_MAX);
+   copy(&state->old_exc[L_FRAME], &state->old_exc[0], PIT_MAX+L_INTERPOL);
 
    return;
 }

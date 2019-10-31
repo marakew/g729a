@@ -50,18 +50,15 @@
  *     a[3] = {0.10000000E+01, +0.19330735E+01, -0.93589199E+00};         *
  *-----------------------------------------------------------------------*/
 
-static FLOAT x0, x1;         /* high-pass fir memory          */
-static FLOAT y1, y2;         /* high-pass iir memory          */
-
-void init_post_process( void
+void init_post_process(filter *f
 )
 {
-  x0 = x1 = (F)0.0;
-  y2 = y1 = (F)0.0;
+  f->x0 = f->x1 = (F)0.0;
+  f->y2 = f->y1 = (F)0.0;
   return;
 }
 
-void post_process(
+void post_process(filter *f,
    FLOAT signal[],      /* (i/o)  : signal                     */
    int lg               /* (i)    : lenght of signal           */
 )
@@ -72,15 +69,15 @@ void post_process(
 
   for(i=0; i<lg; i++)
   {
-    x2 = x1;
-    x1 = x0;
-    x0 = signal[i];
+    x2 = f->x1;
+    f->x1 = f->x0;
+    f->x0 = signal[i];
 
-    y0 = y1*a100[1] + y2*a100[2] + x0*b100[0] + x1*b100[1] + x2*b100[2];
+    y0 = f->y1*a100[1] + f->y2*a100[2] + f->x0*b100[0] + f->x1*b100[1] + x2*b100[2];
 
     signal[i] = y0;
-    y2 = y1;
-    y1 = y0;
+    f->y2 = f->y1;
+    f->y1 = y0;
   }
 
   return;

@@ -51,6 +51,7 @@ static void   gbk_presel(
  *----------------------------------------------------------------------------
  */
 int qua_gain(           /* output: quantizer index                   */
+  FLOAT past_qua_en[],
   FLOAT code[],         /* input : fixed codebook vector             */
   FLOAT *g_coeff,       /* input : correlation factors               */
   int l_subfr,          /* input : fcb vector length                 */
@@ -68,8 +69,6 @@ int qua_gain(           /* output: quantizer index                   */
  * mean-squared weighted error criterion is used in the quantizer search.    *
  *   CS Codebook , fast pre-selection version                                *
  */
-   static FLOAT past_qua_en[4]={(F)-14.0,(F)-14.0,(F)-14.0,(F)-14.0};
-
    int    i,j, index1, index2;
    int    cand1,cand2 ;
    FLOAT  gcode0 ;

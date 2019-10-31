@@ -39,22 +39,13 @@
  *         Static memory allocation.                      *
  *--------------------------------------------------------*/
 
-        /* Excitation vector */
-
- static FLOAT old_exc[L_FRAME+PIT_MAX+L_INTERPOL];
- static FLOAT *exc;
-
         /* Lsp (Line spectral pairs) */
 
  static FLOAT lsp_old[M]={
        (F)0.9595,  (F)0.8413,  (F)0.6549,  (F)0.4154,  (F)0.1423,
       (F)-0.1423, (F)-0.4154, (F)-0.6549, (F)-0.8413, (F)-0.9595};
 
- static FLOAT mem_syn[M];       /* Synthesis filter's memory          */
- static FLOAT sharp;            /* pitch sharpening of previous frame */
- static int old_T0;             /* integer delay of previous frame    */
- static FLOAT gain_code;        /* Code gain                          */
- static FLOAT gain_pitch;       /* Pitch gain                         */
+ static FLOAT past_qua_en[4]={(F)-14.0,(F)-14.0,(F)-14.0,(F)-14.0};
 
 
 /*-----------------------------------------------------------------*
@@ -65,25 +56,26 @@
  *                                                                 *
  *-----------------------------------------------------------------*/
 
-void init_decod_ld8a(void)
+void init_decod_ld8a(decoder_state *state)
 {
 
   /* Initialize static pointer */
 
-  exc = old_exc + PIT_MAX + L_INTERPOL;
+  state->exc = state->old_exc + PIT_MAX + L_INTERPOL;
 
   /* Static vectors to zero */
 
-  set_zero(old_exc, PIT_MAX+L_INTERPOL);
-  set_zero(mem_syn, M);
+  set_zero(state->old_exc, PIT_MAX+L_INTERPOL);
+  set_zero(state->mem_syn, M);
 
-  sharp  = SHARPMIN;
-  old_T0 = 60;
-  gain_code = (F)0.0;
-  gain_pitch = (F)0.0;
+  state->sharp  = SHARPMIN;
+  state->old_T0 = 60;
+  state->gain_code = (F)0.0;
+  state->gain_pitch = (F)0.0;
 
-  lsp_decw_reset() ;
+  lsp_decw_reset(&state->lsp_dec);
 
+  copy(past_qua_en, state->past_qua_en, M);
   return;
 }
 
@@ -94,7 +86,7 @@ void init_decod_ld8a(void)
  *                                                                 *
  *-----------------------------------------------------------------*/
 
-void decod_ld8a(
+void decod_ld8a(decoder_state *state,
   int      parm[],      /* (i)   : vector of synthesis parameters      */
   FLOAT   synth[],     /* (o)   : synthesis speech                     */
   FLOAT   A_t[],       /* (o)   : decoded LP filter in 2 subframes     */
@@ -115,7 +107,7 @@ void decod_ld8a(
 
    /* Decode the LSPs */
 
-   d_lsp(parm, lsp_new, bfi+bad_lsf );
+   d_lsp(&state->lsp_dec, parm, lsp_new, bfi+state->bad_lsf );
    parm += 2;                        /* Advance synthesis parameters pointer */
 
   /*
@@ -125,11 +117,11 @@ void decod_ld8a(
 
    /* Interpolation of LPC for the 2 subframes */
 
-   int_qlpc(lsp_old, lsp_new, A_t);
+   int_qlpc(state->lsp_old, lsp_new, A_t);
 
    /* update the LSFs for the next frame */
 
-   copy(lsp_new, lsp_old, M);
+   copy(lsp_new, state->lsp_old, M);
 
    /*------------------------------------------------------------------------*
     *          Loop for every subframe in the analysis frame                 *
@@ -160,15 +152,15 @@ void decod_ld8a(
         if( bad_pitch == 0)
         {
             dec_lag3(index, PIT_MIN, PIT_MAX, i_subfr, &T0, &T0_frac);
-            old_T0 = T0;
+            state->old_T0 = T0;
         }
         else        /* Bad frame, or parity error */
         {
-          T0  =  old_T0;
+          T0  =  state->old_T0;
           T0_frac = 0;
-          old_T0++;
-          if( (old_T0 - PIT_MAX) > 0)
-            old_T0 = PIT_MAX;
+          state->old_T0++;
+          if( (state->old_T0 - PIT_MAX) > 0)
+            state->old_T0 = PIT_MAX;
         }
 
       }
@@ -177,15 +169,15 @@ void decod_ld8a(
         if( bfi == 0)
         {
           dec_lag3(index, PIT_MIN, PIT_MAX, i_subfr, &T0, &T0_frac);
-          old_T0 = T0;
+          state->old_T0 = T0;
         }
         else
         {
-          T0  =  old_T0;
+          T0  =  state->old_T0;
           T0_frac = 0;
-          old_T0++;
-          if( (old_T0 - PIT_MAX) > 0)
-            old_T0 = PIT_MAX;
+          state->old_T0++;
+          if( (state->old_T0 - PIT_MAX) > 0)
+            state->old_T0 = PIT_MAX;
         }
       }
       *T2++ = T0;
@@ -194,7 +186,7 @@ void decod_ld8a(
       * - Find the adaptive codebook vector.            *
       *-------------------------------------------------*/
 
-      pred_lt_3(&exc[i_subfr], T0, T0_frac, L_SUBFR);
+      pred_lt_3(&state->exc[i_subfr], T0, T0_frac, L_SUBFR);
 
       /*-------------------------------------------------------*
        * - Decode innovative codebook.                         *
@@ -210,7 +202,7 @@ void decod_ld8a(
       decod_ACELP(parm[1], parm[0], code);
       parm +=2;
 
-      for (i = T0; i < L_SUBFR; i++)   code[i] += sharp * code[i-T0];
+      for (i = T0; i < L_SUBFR; i++)   code[i] += state->sharp * code[i-T0];
 
       /*-------------------------------------------------*
        * - Decode pitch and codebook gains.              *
@@ -218,15 +210,15 @@ void decod_ld8a(
 
       index = *parm++;          /* index of energy VQ */
 
-      dec_gain(index, code, L_SUBFR, bfi, &gain_pitch, &gain_code);
+      dec_gain(state->past_qua_en, index, code, L_SUBFR, bfi, &state->gain_pitch, &state->gain_code);
 
       /*-------------------------------------------------------------*
        * - Update pitch sharpening "sharp" with quantized gain_pitch *
        *-------------------------------------------------------------*/
 
-      sharp = gain_pitch;
-      if (sharp > SHARPMAX) sharp = SHARPMAX;
-      if (sharp < SHARPMIN) sharp = SHARPMIN;
+      state->sharp = gain_pitch;
+      if (state->sharp > SHARPMAX) state->sharp = SHARPMAX;
+      if (state->sharp < SHARPMIN) state->sharp = SHARPMIN;
 
       /*-------------------------------------------------------*
        * - Find the total excitation.                          *
@@ -234,9 +226,9 @@ void decod_ld8a(
        *-------------------------------------------------------*/
 
       for (i = 0; i < L_SUBFR;  i++)
-         exc[i+i_subfr] = gain_pitch*exc[i+i_subfr] + gain_code*code[i];
+         state->exc[i+i_subfr] = state->gain_pitch*state->exc[i+i_subfr] + state->gain_code*code[i];
 
-      syn_filt(Az, &exc[i_subfr], &synth[i_subfr], L_SUBFR, mem_syn, 1);
+      syn_filt(Az, &state->exc[i_subfr], &state->synth[i_subfr], L_SUBFR, state->mem_syn, 1);
 
       Az  += MP1;        /* interpolated LPC parameters for next subframe */
    }
@@ -246,7 +238,7 @@ void decod_ld8a(
    * -> shift to the left by L_FRAME  exc[]           *
    *--------------------------------------------------*/
 
-   copy(&old_exc[L_FRAME], &old_exc[0], PIT_MAX+L_INTERPOL);
+   copy(&state->old_exc[L_FRAME], &state->old_exc[0], PIT_MAX+L_INTERPOL);
 
    return;
 }

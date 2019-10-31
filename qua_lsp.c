@@ -53,18 +53,17 @@ static void lsp_select_2( FLOAT rbuf[], FLOAT   lspcb1[], FLOAT wegt[],
 static void lsp_last_select( FLOAT      tdist[MODE], int        *mode_index );
 static void lsp_get_tdist( FLOAT        wegt[], FLOAT   buf[],
                           FLOAT *tdist, FLOAT   rbuf[], FLOAT   fg_sum[] );
-static void lsp_qua_cs( FLOAT *freq_in, FLOAT *freqout, int *cod);
+static void lsp_qua_cs(lsp_encw *l, FLOAT *freq_in, FLOAT *freqout, int *cod);
 
 
 /* static memory */
-static FLOAT freq_prev[MA_NP][M];    /* previous LSP vector       */
 static FLOAT freq_prev_reset[M] = {  /* previous LSP vector(init) */
  (F)0.285599,  (F)0.571199,  (F)0.856798,  (F)1.142397,  (F)1.427997,
  (F)1.713596,  (F)1.999195,  (F)2.284795,  (F)2.570394,  (F)2.855993
 };     /* PI*(float)(j+1)/(float)(M+1) */
 
 
-void qua_lsp(
+void qua_lsp(lsp_encw *l,
   FLOAT lsp[],       /* (i) : Unquantized LSP            */
   FLOAT lsp_q[],     /* (o) : Quantized LSP              */
   int ana[]          /* (o) : indexes                    */
@@ -78,7 +77,7 @@ void qua_lsp(
   for (i=0; i<M; i++ )
      lsf[i] = (FLOAT)acos(lsp[i]);
 
-  lsp_qua_cs(lsf, lsf_q, ana );
+  lsp_qua_cs(l, lsf, lsf_q, ana );
 
   /* Convert LSFs to LSPs */
 
@@ -93,19 +92,19 @@ void qua_lsp(
  *----------------------------------------------------------------------------
  */
 void lsp_encw_reset(
- void
+ lsp_encw *l
 )
 {
    int  i;
    for(i=0; i<MA_NP; i++)
-     copy (&freq_prev_reset[0], &freq_prev[i][0], M );
+     copy (&freq_prev_reset[0], &l->freq_prev[i][0], M );
    return;
 }
 /*----------------------------------------------------------------------------
  * lsp_qua_cs - lsp quantizer
  *----------------------------------------------------------------------------
  */
-static void lsp_qua_cs(
+static void lsp_qua_cs(lsp_encw *l,
  FLOAT  *flsp_in,       /*  input : Original LSP parameters      */
  FLOAT  *lspq_out,       /*  output: Quantized LSP parameters     */
  int  *code             /*  output: codes of the selected LSP    */
@@ -116,7 +115,7 @@ static void lsp_qua_cs(
    get_wegt( flsp_in, wegt );
 
    relspwed( flsp_in, wegt, lspq_out, lspcb1, lspcb2, fg,
-            freq_prev, fg_sum, fg_sum_inv, code);
+            l->freq_prev, fg_sum, fg_sum_inv, code);
    return;
 }
 /*----------------------------------------------------------------------------

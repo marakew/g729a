@@ -25,36 +25,19 @@
 #include "typedef.h"
 #include "ld8a.h"
 
-int bad_lsf;        /* bad LSF indicator   */
-/*
-   This variable should be always set to zero unless transmission errors
-   in LSP indices are detected.
-   This variable is useful if the channel coding designer decides to
-   perform error checking on these important parameters. If an error is
-   detected on the  LSP indices, the corresponding flag is
-   set to 1 signalling to the decoder to perform parameter substitution.
-   (The flags should be set back to 0 for correct transmission).
-*/
-
-static FLOAT  synth_buf[L_FRAME+M];     /* Synthesis                  */
-FLOAT  *synth;
-static FLOAT  Az_dec[MP1*2];            /* Decoded Az for post-filter */
-static int T2[2];                       /* Decoded Pitch              */
-static int parm[PRM_SIZE+1];            /* Synthesis parameters */
-
 /*-----------------------------------------------------------------*
  *           Initialization of decoder                             *
  *-----------------------------------------------------------------*/
-void va_g729a_init_decoder()
+void va_g729a_init_decoder(decoder_state *state)
 {  
 	int i;
-	for (i=0; i<M; i++) synth_buf[i] = (F)0.0;
-	synth = synth_buf + M;
+	for (i=0; i<M; i++) state->synth_buf[i] = (F)0.0;
+	state->synth = state->synth_buf + M;
 
-	bad_lsf = 0;          /* Initialize bad LSF indicator */
-	init_decod_ld8a();
-	init_post_filter();
-	init_post_process();
+	state->bad_lsf = 0;          /* Initialize bad LSF indicator */
+	init_decod_ld8a(state);
+	init_post_filter(&state->post_filter);
+	init_post_process(&state->post_process);
 }
 
 /*-----------------------------------------------------------------*
@@ -63,33 +46,37 @@ void va_g729a_init_decoder()
  * synth_short buffer space length (>=L_FRAME sizeof(short) bytes) *                             *
  * bad frame indicator (bfi)							           *
  *-----------------------------------------------------------------*/
-void va_g729a_decoder(unsigned char * bitstream, short *synth_short, int bfi)
+void va_g729a_decoder(decoder_state *state, unsigned char * bitstream, short *synth_short, int bfi)
 {
-    int  i; 
-    FLOAT temp;
+	int  i; 
+	FLOAT temp;
+	FLOAT  Az_dec[MP1*2];            /* Decoded Az for post-filter */
+	int T2[2];                       /* Decoded Pitch              */
+	int parm[PRM_SIZE+1];            /* Synthesis parameters */
 
-    bits2prm_ld8k(bitstream, &parm[0]);	
+
+	bits2prm_ld8k(bitstream, &parm[0]);	
 	parm[3] = check_parity_pitch(parm[2], parm[3] ); /* get parity check result */
 
-	decod_ld8a(parm, synth, Az_dec, T2, bfi);             /* decoder */
+	decod_ld8a(state, parm, state->synth, Az_dec, T2, bfi);             /* decoder */
 
-	post_filter(synth, Az_dec, T2);                  /* Post-filter */
+	post_filter(&state->post_filter, state->synth, Az_dec, T2);                  /* Post-filter */
 
-	post_process(synth, L_FRAME);                    /* Highpass filter */
+	post_process(&state->post_process, state->synth, L_FRAME);                    /* Highpass filter */
 
 	/*---------------------------------------------------------------*
-     * writes a FLOAT array as a Short to a output buf    *
-     *---------------------------------------------------------------*/
+	 * writes a FLOAT array as a Short to a output buf    *
+	 *---------------------------------------------------------------*/
 	for(i=0; i < L_FRAME; i++)
-    {
+	{
 		/* round and convert to int  */
-        temp = synth[i];
-        if (temp >= (F)0.0)
+	        temp = state->synth[i];
+	        if (temp >= (F)0.0)
 			temp += (F)0.5;
-        else  temp -= (F)0.5;
-        if (temp >  (F)32767.0 ) temp =  (F)32767.0;
-        if (temp < (F)-32768.0 ) temp = (F)-32768.0;
-        synth_short[i] = (INT16) temp;
-    }
+	        else  temp -= (F)0.5;
+	        if (temp >  (F)32767.0 ) temp =  (F)32767.0;
+	        if (temp < (F)-32768.0 ) temp = (F)-32768.0;
+	        synth_short[i] = (INT16) temp;
+	}
 }
 

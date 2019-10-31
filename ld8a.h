@@ -145,20 +145,120 @@
 #define SIZE_WORD (INT16)80     /* number of speech bits                     */
 
 /*-------------------------------*
+ * context                       *
+ *-------------------------------*/
+struct filter
+{
+  FLOAT x0, x1;		/* high-pass fir memory          */
+  FLOAT y1, y2;		/* high-pass fir memory          */
+};
+
+
+struct lsp_decw
+{
+  FLOAT freq_prev[MA_NP][M];    /* previous LSP vector       */
+/* memory for frame erase operation */
+  int prev_ma;                  /* previous MA prediction coef.*/
+  FLOAT prev_lsp[M];            /* previous LSP vector         */
+};
+
+struct lsp_encw
+{
+  FLOAT freq_prev[MA_NP][M];    /* previous LSP vector       */
+};
+
+
+struct post_filter
+{
+        /* inverse filtered synthesis (with A(z/GAMMA2_PST))   */
+  FLOAT res2_buf[PIT_MAX+L_SUBFR];
+  FLOAT *res2;
+
+        /* memory of filter 1/A(z/GAMMA1_PST) */
+  FLOAT mem_syn_pst[M];
+  FLOAT mem_pre;
+  FLOAT past_gain;
+};
+
+struct decoder_state
+{
+        /* Excitation vector */
+  FLOAT old_exc[L_FRAME+PIT_MAX+L_INTERPOL];
+  FLOAT *exc;
+
+        /* Lsp (Line spectral pairs) */
+  FLOAT lsp_old[M];
+
+  FLOAT mem_syn[M];       /* Synthesis filter's memory          */
+  FLOAT sharp;            /* pitch sharpening of previous frame */
+  int old_T0;             /* integer delay of previous frame    */
+  FLOAT gain_code;        /* Code gain                          */
+  FLOAT gain_pitch;       /* Pitch gain                         */
+
+  int bad_lsf;		/* bad LSF indicator   */
+/*
+   This variable should be always set to zero unless transmission errors
+   in LSP indices are detected.
+   This variable is useful if the channel coding designer decides to
+   perform error checking on these important parameters. If an error is
+   detected on the  LSP indices, the corresponding flag is
+   set to 1 signalling to the decoder to perform parameter substitution.
+   (The flags should be set back to 0 for correct transmission).
+*/
+
+  lsp_decw lsp_dec;
+  FLOAT past_qua_en[4];
+  filter post_process;
+  post_filter post_filter;
+  FLOAT  synth_buf[L_FRAME+M];     /* Synthesis                  */
+  FLOAT  *synth;
+};
+
+struct encoder_state
+{
+        /* Speech vector */
+  FLOAT old_speech[L_TOTAL];
+  FLOAT *speech, *p_window;
+  FLOAT *new_speech;                    /* Global variable */
+					/* Pointer to new speech data   */
+
+        /* Weighted speech vector */
+  FLOAT old_wsp[L_FRAME+PIT_MAX];
+  FLOAT *wsp;
+
+        /* Excitation vector */
+  FLOAT old_exc[L_FRAME+PIT_MAX+L_INTERPOL];
+  FLOAT *exc;
+
+        /* LSP Line spectral frequencies */
+  FLOAT lsp_old[M];
+  FLOAT lsp_old_q[M];
+
+        /* Filter's memory */
+  FLOAT  mem_w0[M], mem_w[M], mem_zero[M];
+  FLOAT  sharp;
+
+  lsp_encw lsp_enc;
+  FLOAT exc_err[4];
+  FLOAT past_qua_en[4];
+  filter pre_process;
+};
+
+/*-------------------------------*
  * Pre and post-process functions*
  *-------------------------------*/
-void init_post_process( void
+void init_post_process(filter *f
 );
 
-void post_process(
+void post_process(filter *f,
    FLOAT signal[],      /* (i/o)  : signal           */
    int lg               /* (i)    : lenght of signal */
 );
 
-void init_pre_process( void
+void init_pre_process(filter *f
 );
 
-void pre_process(
+void pre_process(filter *f,
    FLOAT signal[],      /* (i/o)  : signal           */
    int lg               /* (i)    : lenght of signal */
 );
@@ -166,15 +266,15 @@ void pre_process(
 /*----------------------------------*
  * Main coder and decoder functions *
  *----------------------------------*/
-void  init_coder_ld8a(void);
+void  init_coder_ld8a(encoder_state *state);
 
-void  coder_ld8a(
+void  coder_ld8a(encoder_state *state,
  int ana[]              /* output: analysis parameters */
 );
 
-void  init_decod_ld8a(void);
+void  init_decod_ld8a(decoder_state *state);
 
-void  decod_ld8a(
+void  decod_ld8a(decoder_state *state,
   int parm[],          /* (i)   : vector of synthesis parameters
                                   parm[0] = bad frame indicator (bfi)  */
   FLOAT   synth[],     /* (o)   : synthesis speech                     */
@@ -300,13 +400,13 @@ void  decod_ACELP(int signs, int positions, FLOAT cod[]);
 /*-----------------------------------------------------------*
  * Prototypes of LSP VQ functions                            *
  *-----------------------------------------------------------*/
-void qua_lsp(
+void qua_lsp(lsp_encw *l
   FLOAT lsp[],       /* (i) : Unquantized LSP            */
   FLOAT lsp_q[],     /* (o) : Quantized LSP              */
   int ana[]          /* (o) : indexes                    */
 );
 
-void lsp_encw_reset(void);
+void lsp_encw_reset(lsp_encw *l);
 
 void lsp_expand_1( FLOAT buf[], FLOAT c);
 
@@ -326,13 +426,13 @@ void lsp_get_quant(
   FLOAT fg_sum[]
 );
 
-void d_lsp(
+void d_lsp(lsp_decw *l,
 int index[],           /* input : indexes                 */
 FLOAT lsp_new[],       /* output: decoded lsp             */
 int bfi                /* input : frame erase information */
 );
 
-void lsp_decw_reset(void);
+void lsp_decw_reset(lsp_decw *l);
 
 void lsp_prev_extract(
   FLOAT lsp[M],
@@ -350,10 +450,10 @@ void lsp_prev_update(
 /*--------------------------------------------------------------------------*
  * gain VQ functions.                                                       *
  *--------------------------------------------------------------------------*/
-int qua_gain(FLOAT code[], FLOAT *coeff, int lcode, FLOAT *gain_pit,
+int qua_gain(FLOAT past_qua_en[], FLOAT code[], FLOAT *coeff, int lcode, FLOAT *gain_pit,
         FLOAT *gain_code, int tameflag   );
 
-void  dec_gain(int indice, FLOAT code[], int lcode, int bfi, FLOAT *gain_pit,
+void  dec_gain(FLOAT past_qua_en[], int indice, FLOAT code[], int lcode, int bfi, FLOAT *gain_pit,
                FLOAT *gain_code);
 
 void gain_predict(
@@ -383,9 +483,9 @@ void  bits2prm_ld8k(unsigned char * bits, int prm[]);
  * Prototypes for the post filtering                         *
  *-----------------------------------------------------------*/
 
-void init_post_filter(void);
+void init_post_filter(post_filter *f);
 
-void post_filter(
+void post_filter(post_filter *f,
   FLOAT *syn,     /* in/out: synthesis speech (postfiltered is output)    */
   FLOAT *a_t,     /* input : interpolated LPC parameters in all subframes */
   int *T          /* input : decoded pitch lags in all subframes          */
@@ -395,11 +495,11 @@ void post_filter(
  * prototypes for taming procedure.                           *
  *------------------------------------------------------------*/
 
-void   init_exc_err(void);
+void   init_exc_err(FLOAT exc_err[4]);
 
-void   update_exc_err(FLOAT gain_pit, int t0);
+void   update_exc_err(FLOAT exc_err[4], FLOAT gain_pit, int t0);
 
-int test_err(int t0, int t0_frac);
+int test_err(FLOAT exc_err[4], int t0, int t0_frac);
 
 /*-----------------------------------------------------------*
  * Prototypes for auxiliary functions                        *

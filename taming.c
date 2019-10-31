@@ -32,9 +32,7 @@
  #include "ld8k.h"
 #endif
 
-static FLOAT exc_err[4];
-
-void init_exc_err(void)
+void init_exc_err(FLOAT exc_err[4])
 {
   int i;
   for(i=0; i<4; i++) exc_err[i] = (FLOAT)1.;
@@ -46,6 +44,7 @@ void init_exc_err(void)
  * adaptive codebook contribution                                         *
  **************************************************************************/
 int test_err( /* (o) flag set to 1 if taming is necessary  */
+FLOAT exc_err[4],
 int t0,       /* (i) integer part of pitch delay           */
 int t0_frac   /* (i) fractional part of pitch delay        */
 )
@@ -81,6 +80,7 @@ int t0_frac   /* (i) fractional part of pitch delay        */
  **************************************************************************/
 
 void update_exc_err(
+ FLOAT exc_err[4],
  FLOAT gain_pit,      /* (i) pitch gain */
  int t0             /* (i) integer part of pitch delay */
 )

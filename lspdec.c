@@ -32,34 +32,28 @@
 #endif
 
 /* Prototype definitions of static functions */
-static void lsp_iqua_cs( int prm[], FLOAT lsp[], int erase);
+static void lsp_iqua_cs(lsp_decw *l, int prm[], FLOAT lsp[], int erase);
 
 /* static memory */
-static FLOAT freq_prev[MA_NP][M];    /* previous LSP vector       */
 static FLOAT freq_prev_reset[M] = {  /* previous LSP vector(init) */
  (F)0.285599,  (F)0.571199,  (F)0.856798,  (F)1.142397,  (F)1.427997,
  (F)1.713596,  (F)1.999195,  (F)2.284795,  (F)2.570394,  (F)2.855993
 };     /* PI*(float)(j+1)/(float)(M+1) */
 
-/* static memory for frame erase operation */
-static int prev_ma;                  /* previous MA prediction coef.*/
-static FLOAT prev_lsp[M];            /* previous LSP vector         */
-
-
 /*----------------------------------------------------------------------------
  * Lsp_decw_reset -   set the previous LSP vectors
  *----------------------------------------------------------------------------
  */
-void lsp_decw_reset(void)
+void lsp_decw_reset(lsp_decw *l)
 {
    int  i;
 
    for(i=0; i<MA_NP; i++)
-     copy (freq_prev_reset, &freq_prev[i][0], M );
+     copy (freq_prev_reset, &l->freq_prev[i][0], M );
 
-   prev_ma = 0;
+   l->prev_ma = 0;
 
-   copy (freq_prev_reset, prev_lsp, M );
+   copy (freq_prev_reset, l->prev_lsp, M );
 
    return;
 }
@@ -69,7 +63,7 @@ void lsp_decw_reset(void)
  * lsp_iqua_cs -  LSP main quantization routine
  *----------------------------------------------------------------------------
  */
-static void lsp_iqua_cs(
+static void lsp_iqua_cs(lsp_decw *l,
  int    prm[],          /* input : codes of the selected LSP */
  FLOAT  lsp_q[],        /* output: Quantized LSP parameters  */
  int    erase           /* input : frame erase information   */
@@ -90,19 +84,19 @@ static void lsp_iqua_cs(
         code2 = prm[1] & (INT16)(NC1 - 1);
 
         lsp_get_quant(lspcb1, lspcb2, code0, code1, code2, fg[mode_index],
-              freq_prev, lsp_q, fg_sum[mode_index]);
+              l->freq_prev, lsp_q, fg_sum[mode_index]);
 
-        copy(lsp_q, prev_lsp, M );
-        prev_ma = mode_index;
+        copy(lsp_q, l->prev_lsp, M );
+        l->prev_ma = mode_index;
      }
    else                         /* Frame erased */
      {
-       copy(prev_lsp, lsp_q, M );
+       copy(l->prev_lsp, lsp_q, M );
 
         /* update freq_prev */
-       lsp_prev_extract(prev_lsp, buf,
-          fg[prev_ma], freq_prev, fg_sum_inv[prev_ma]);
-       lsp_prev_update(buf, freq_prev);
+       lsp_prev_extract(l->prev_lsp, buf,
+          fg[l->prev_ma], l->freq_prev, fg_sum_inv[l->prev_ma]);
+       lsp_prev_update(buf, l->freq_prev);
      }
      return;
 }
@@ -110,7 +104,7 @@ static void lsp_iqua_cs(
  * d_lsp - decode lsp parameters
  *----------------------------------------------------------------------------
  */
-void d_lsp(
+void d_lsp(lsp_decw *l,
     int     index[],    /* input : indexes                 */
     FLOAT   lsp_q[],    /* output: decoded lsp             */
     int     bfi         /* input : frame erase information */
@@ -118,7 +112,7 @@ void d_lsp(
 {
    int i;
 
-   lsp_iqua_cs(index, lsp_q,bfi); /* decode quantized information */
+   lsp_iqua_cs(l, index, lsp_q,bfi); /* decode quantized information */
 
    /* Convert LSFs to LSPs */
 

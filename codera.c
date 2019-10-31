@@ -23,30 +23,30 @@
 
 #include "typedef.h"
 #include "ld8a.h"
-extern FLOAT *new_speech;           /* Pointer to new speech data   */
-static int prm[PRM_SIZE];           /* Transmitted parameters        */
 
 /*-------------------------------------------------*
  * Initialization of the coder.                    *
  *-------------------------------------------------*/
-void va_g729a_init_encoder()
+void va_g729a_init_encoder(encoder_state *state)
 {
-   init_pre_process();
-   init_coder_ld8a();           /* Initialize the coder             */
+   init_pre_process(&state->pre_process);
+   init_coder_ld8a(state);           /* Initialize the coder             */
 }
 
 /*---------------------------------------------------------------------*
  * L_FRAME data are read. (L_FRAME = number of speech data per frame)  *  
  * output PRM_SIZE int encoded data                                    *
  *---------------------------------------------------------------------*/
-void va_g729a_encoder(short *speech, unsigned char *bitstream)
+void va_g729a_encoder(encoder_state *state, short *speech, unsigned char *bitstream)
 {
 	INT16  i;
-    for (i = 0; i < L_FRAME; i++)  new_speech[i] = (FLOAT) speech[i];
+  int prm[PRM_SIZE];           /* Transmitted parameters        */
 
-    pre_process( new_speech, L_FRAME);
+    for (i = 0; i < L_FRAME; i++)  state->new_speech[i] = (FLOAT) speech[i];
 
-    coder_ld8a(prm);
+    pre_process(&state->pre_process, state->new_speech, L_FRAME);
+
+    coder_ld8a(state, prm);
     prm2bits_ld8k(prm, bitstream);
 }
 
