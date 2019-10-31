@@ -103,7 +103,6 @@ void decod_ld8a(decoder_state *state,
    int i, i_subfr;
    int T0, T0_frac, index;
    int  bad_pitch; //bfi, 
-   extern int bad_lsf;        /* bad LSF indicator   */
 
    /* Decode the LSPs */
 
