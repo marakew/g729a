@@ -261,7 +261,7 @@ struct vad_state
   FLOAT MeanE, MeanSE, MeanSLE, MeanSZC;
   FLOAT prev_energy;
   int count_sil, count_update, count_ext;
-  int flag, v_flag, less_count;
+  int flag, v_flag, count_inert, less_count;
 };
 
 struct encoder_state
