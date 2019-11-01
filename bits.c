@@ -1,7 +1,5 @@
 /*
-   ITU-T G.729 Annex C - Reference C code for floating point
-                         implementation of G.729
-                         Version 1.01 of 15.September.98
+  ITU-T G.729A Speech Coder with Annex B    ANSI-C Source Code
 */
 
 /*
@@ -15,25 +13,13 @@
 ----------------------------------------------------------------------
 */
 
-/*
- File : BITS.C
- Used for the floating point version of both
- G.729 main body and G.729A
-*/
-
 /*****************************************************************************/
 /* bit stream manipulation routines                                          */
 /*****************************************************************************/
 
 #include "typedef.h"
-#include "version.h"
-#ifdef VER_G729A
- #include "ld8a.h"
- #include "tab_ld8a.h"
-#else
- #include "ld8k.h"
- #include "tab_ld8k.h"
-#endif
+#include "ld8a.h"
+#include "tab_ld8a.h"
 
 /* prototypes for local functions */
 
@@ -67,7 +53,8 @@ static int    bin2int(int  no_of_bits, INT16 *bitstream);
 
 void prm2bits_ld8k(
  int  prm[],            /* input : encoded parameters  */
- unsigned char *bits           /* output: serial bits         */
+ unsigned char *bits,           /* output: serial bits         */
+ int frame_size
 )
 {
    bits[0] = (unsigned char)(prm[0] & 0xff);
@@ -133,7 +120,8 @@ static void int2bin(
  */
 void bits2prm_ld8k(
  unsigned char *bits,      /* input : serial bits        */
- int prm[]                 /* output: decoded parameters */
+ int prm[],                 /* output: decoded parameters */
+ int frame_size
 )
 {
    prm[0] = (int)(bits[0]);

@@ -1,7 +1,5 @@
 /*
-   ITU-T G.729 Annex C - Reference C code for floating point
-                         implementation of G.729 Annex A
-                         Version 1.01 of 15.September.98
+  ITU-T G.729A Speech Coder with Annex B    ANSI-C Source Code
 */
 
 /*
@@ -15,10 +13,6 @@
 ----------------------------------------------------------------------
 */
 
-
-/*-----------------------------------------------------------*
- * ld8a.h - include file for G.729a 8.0 kb/s codec           *
- *-----------------------------------------------------------*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -154,7 +148,7 @@ struct filter
 };
 
 
-struct lsp_decw
+struct lsp_dec
 {
   FLOAT freq_prev[MA_NP][M];    /* previous LSP vector       */
 /* memory for frame erase operation */
@@ -162,7 +156,7 @@ struct lsp_decw
   FLOAT prev_lsp[M];            /* previous LSP vector         */
 };
 
-struct lsp_encw
+struct lsp_enc
 {
   FLOAT freq_prev[MA_NP][M];    /* previous LSP vector       */
 };
@@ -180,6 +174,20 @@ struct post_filter
   FLOAT past_gain;
 };
 
+struct dec_cng_state
+{
+  /* dec_sid.c */
+  FLOAT cur_gain;
+  FLOAT lspSid[M];
+  FLOAT sid_gain;
+
+  /* timing.c */
+  FLOAT exc_err[4];
+
+  /* tab_dtx.c */
+  FLOAT noise_fg[MODE][MA_NP][M];
+};
+
 struct decoder_state
 {
         /* Excitation vector */
@@ -195,7 +203,12 @@ struct decoder_state
   FLOAT gain_code;        /* Code gain                          */
   FLOAT gain_pitch;       /* Pitch gain                         */
 
+  /* for G.729B */
   INT16 seed_fer;
+  /* CNG variables */
+  int past_ftyp;
+  INT16 seed;
+  FLOAT sid_save;
 
   int bad_lsf;		/* bad LSF indicator   */
 /*
@@ -208,13 +221,47 @@ struct decoder_state
    (The flags should be set back to 0 for correct transmission).
 */
 
-  lsp_decw lsp_dec;
-
+  lsp_decw lsp_state;
+  dec_cng_state cng_state;
   FLOAT past_qua_en[4];
   filter post_process;
   post_filter post_filter;
   FLOAT  synth_buf[L_FRAME+M];     /* Synthesis                  */
   FLOAT  *synth;
+};
+
+struct enc_cng_state
+{
+  FLOAT lspSid_q[M] ;
+  FLOAT pastCoeff[MP1];
+  FLOAT RCoeff[MP1];
+  FLOAT Acf[SIZ_ACF];
+  FLOAT sumAcf[SIZ_SUMACF];
+  FLOAT ener[NB_GAIN];
+  int fr_cur;
+  FLOAT cur_gain;
+  int nb_ener;
+  FLOAT sid_gain;
+  int flag_chang;
+  FLOAT prev_energy;
+  int count_fr0;
+
+  /* timing.c */
+  FLOAT exc_err[4];
+
+  /* tab_dtx.c */
+  FLOAT noise_fg[MODE][MA_NP][M];
+};
+
+struct vad_state
+{
+  FLOAT MeanLSF[M];
+  FLOAT Min_buffer[16];
+  FLOAT Prev_Min, Next_Min, Min;
+  FLOAT MeanE, MeanSE, MeanSLE, MeanSZC;
+  FLOAT prev_energy;
+  int count_sil, count_update, count_ext;
+  int flag, v_flag, less_count;
 };
 
 struct encoder_state
@@ -241,11 +288,22 @@ struct encoder_state
   FLOAT  mem_w0[M], mem_w[M], mem_zero[M];
   FLOAT  sharp;
 
-  lsp_encw lsp_enc;
+  /* For G.729B */
+  /* DTX variables */
+  int pastVad;
+  int ppastVad;
+  INT16 seed;
 
-  FLOAT exc_err[4];
+  lsp_encw lsp_state;
+
+  enc_cng_state cng_state;
+  vad_state vad_state;
+
   FLOAT past_qua_en[4];
   filter pre_process;
+
+  int frame;
+  int dtx_enable;
 };
 
 /*-------------------------------*
@@ -273,7 +331,9 @@ void pre_process(filter *f,
 void  init_coder_ld8a(encoder_state *state);
 
 void  coder_ld8a(encoder_state *state,
- int ana[]              /* output: analysis parameters */
+ int ana[],              /* output: analysis parameters */
+ int frame,              /* input : frame counter */
+ int dtx_enable          /* input : DTX enable flag */
 );
 
 void  init_decod_ld8a(decoder_state *state);
@@ -283,7 +343,8 @@ void  decod_ld8a(decoder_state *state,
                                   parm[0] = bad frame indicator (bfi)  */
   FLOAT   synth[],     /* (o)   : synthesis speech                     */
   FLOAT   A_t[],       /* (o)   : decoded LP filter in 2 subframes     */
-  int *T2              /* (o)   : decoded pitch lag in 2 subframes     */
+  int *T2,              /* (o)   : decoded pitch lag in 2 subframes     */
+  int    *Vad          /* output: decoded frame type                    */
 );
 
 /*-------------------------------*
@@ -407,13 +468,14 @@ void  decod_ACELP(int signs, int positions, FLOAT cod[]);
 /*-----------------------------------------------------------*
  * Prototypes of LSP VQ functions                            *
  *-----------------------------------------------------------*/
-void qua_lsp(lsp_encw *l
+void qua_lsp(
+  lsp_enc *state
   FLOAT lsp[],       /* (i) : Unquantized LSP            */
   FLOAT lsp_q[],     /* (o) : Quantized LSP              */
   int ana[]          /* (o) : indexes                    */
 );
 
-void lsp_encw_reset(lsp_encw *l);
+void lsp_encw_reset(lsp_enc *state);
 
 void lsp_expand_1( FLOAT buf[], FLOAT c);
 
@@ -433,13 +495,14 @@ void lsp_get_quant(
   FLOAT fg_sum[]
 );
 
-void d_lsp(lsp_decw *l,
+void d_lsp(
+lsp_dec *state,
 int index[],           /* input : indexes                 */
 FLOAT lsp_new[],       /* output: decoded lsp             */
 int bfi                /* input : frame erase information */
 );
 
-void lsp_decw_reset(lsp_decw *l);
+void lsp_decw_reset(lsp_dec *state);
 
 void lsp_prev_extract(
   FLOAT lsp[M],
@@ -482,9 +545,9 @@ void  corr_xy2(FLOAT xn[], FLOAT y1[], FLOAT y2[], FLOAT g_coeff[]);
 /*-----------------------*
  * Bitstream function    *
  *-----------------------*/
-void  prm2bits_ld8k(int prm[], unsigned char * bits);
+void  prm2bits_ld8k(int prm[], unsigned char * bits, int frame_size);
 
-void  bits2prm_ld8k(unsigned char * bits, int prm[]);
+void  bits2prm_ld8k(unsigned char * bits, int prm[], int frame_size);
 
 /*-----------------------------------------------------------*
  * Prototypes for the post filtering                         *
@@ -495,7 +558,8 @@ void init_post_filter(post_filter *f);
 void post_filter(post_filter *f,
   FLOAT *syn,     /* in/out: synthesis speech (postfiltered is output)    */
   FLOAT *a_t,     /* input : interpolated LPC parameters in all subframes */
-  int *T          /* input : decoded pitch lags in all subframes          */
+  int *T,          /* input : decoded pitch lags in all subframes          */
+  int *Vad        /* input : decoded frame type                    */
 );
 
 /*------------------------------------------------------------*
@@ -522,5 +586,11 @@ void copy(
   FLOAT  y[],           /* (o)  : output vector  */
   int L                 /* (i)  : vector length  */
 );
-INT16 random_g729(void);
 
+INT16 random_g729(INT16 *seed);
+
+void dvsub(FLOAT *in1, FLOAT *in2, FLOAT *out, INT16 npts);
+FLOAT dvdot(FLOAT *in1, FLOAT *in2, INT16 npts);
+void dvwadd(FLOAT *in1, FLOAT scalar1, FLOAT *in2, FLOAT scalar2,
+             FLOAT *out, INT16 npts);
+void dvsmul(FLOAT *in, FLOAT scalar, FLOAT *out, INT16 npts);

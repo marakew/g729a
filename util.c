@@ -1,7 +1,5 @@
 /*
-   ITU-T G.729 Annex C - Reference C code for floating point
-                         implementation of G.729
-                         Version 1.01 of 15.September.98
+  ITU-T G.729A Speech Coder with Annex B    ANSI-C Source Code
 */
 
 /*
@@ -15,23 +13,12 @@
 ----------------------------------------------------------------------
 */
 
-/*
- File : UTIL.C
- Used for the floating point version of both
- G.729 main body and G.729A
-*/
-
 /*****************************************************************************/
 /* auxiliary functions                                                       */
 /*****************************************************************************/
 
 #include "typedef.h"
-#include "version.h"
-#ifdef VER_G729A
- #include "ld8a.h"
-#else
- #include "ld8k.h"
-#endif
+#include "ld8a.h"
 
 /*-------------------------------------------------------------------*
  * Function  set zero()                                              *
@@ -80,4 +67,32 @@ INT16 random_g729(INT16 *seed)
 
   return(*seed);
 
+}
+
+/*****************************************************************************/
+/* Functions used by VAD.C                                                   */
+/*****************************************************************************/
+void dvsub(FLOAT *in1, FLOAT *in2, FLOAT *out, INT16 npts)
+{
+    while (npts--)  *(out++) = *(in1++) - *(in2++);
+}
+
+FLOAT dvdot(FLOAT *in1, FLOAT *in2, INT16 npts)
+{
+    FLOAT accum;
+    
+    accum = (F)0.0;
+    while (npts--)  accum += *(in1++) * *(in2++);
+    return(accum);
+}
+
+void dvwadd(FLOAT *in1, FLOAT scalar1, FLOAT *in2, FLOAT scalar2,
+                        FLOAT *out, INT16 npts)
+{
+    while (npts--)  *(out++) = *(in1++) * scalar1 + *(in2++) * scalar2;
+}
+
+void dvsmul(FLOAT *in, FLOAT scalar, FLOAT *out, INT16 npts)
+{
+    while (npts--)  *(out++) = *(in++) * scalar;
 }

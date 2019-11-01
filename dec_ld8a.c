@@ -1,7 +1,5 @@
 /*
-   ITU-T G.729 Annex C - Reference C code for floating point
-                         implementation of G.729 Annex A
-                         Version 1.01 of 15.September.98
+  ITU-T G.729A Speech Coder with Annex B    ANSI-C Source Code
 */
 
 /*
@@ -14,10 +12,6 @@
 
 ----------------------------------------------------------------------
 */
-
-/*-----------------------------------------------------------------*
- *   Functions init_decod_ld8a  and decod_ld8a                     *
- *-----------------------------------------------------------------*/
 
 #include "typedef.h"
 #include "ld8a.h"
@@ -73,11 +67,15 @@ void init_decod_ld8a(decoder_state *state)
   state->gain_code = (F)0.0;
   state->gain_pitch = (F)0.0;
 
-  lsp_decw_reset(&state->lsp_dec);
-
+  lsp_decw_reset(&state->lsp_state);
+  init_exc_err(state->dec_cng.exc_err);
   copy(lsp_old, state->lsp_old, M);
 
   state->seed_fer = 21845;
+  state->seed = INIT_SEED;
+  state->past_ftyp = 1;
+  state->sid_save = (F)0.0;
+  init_lsfq_noise(state->dec_cng.noise_fg);
 
   copy(past_qua_en, state->past_qua_en, M);
 
@@ -97,7 +95,8 @@ void decod_ld8a(decoder_state *state,
 				  parm[0] = bad frame indicator (bfi)  */
   FLOAT   synth[],     /* (o)   : synthesis speech                     */
   FLOAT   A_t[],       /* (o)   : decoded LP filter in 2 subframes     */
-  int     *T2          /* (o)   : decoded pitch lag in 2 subframes     */
+  int     *T2,          /* (o)   : decoded pitch lag in 2 subframes     */
+  int    *Vad          /* output: decoded frame type                    */
 )
 {
   FLOAT   *Az;                  /* Pointer on A_t   */
@@ -110,13 +109,50 @@ void decod_ld8a(decoder_state *state,
    int T0, T0_frac, index;
    int  bfi, bad_pitch;
 
+   /* for G.729B */
+   int ftyp;
+   FLOAT lsfq_mem[MA_NP][M];
+
    /* Test bad frame indicator (bfi) */
 
    bfi = *parm++;
 
+   /* for G.729B */
+   ftyp = *parm++;
+
+   if(bfi == 1) {
+     ftyp = state->past_ftyp == 1;
+     //if(ftyp == 1) ftyp = 0;
+     parm[-1] = ftyp;
+   }
+   *Vad = ftyp;
+
+    /* for G.729B */
+   /* Processing non active frames (SID & not transmitted) */
+   if(ftyp != 1) {
+     //get_decfreq_prev(&state->lsp_state, &lsfq_mem[i][0], MA_NP);
+     for (i=0; i<MA_NP; i++) copy(&state->lsp_state.freq_prev[i][0], &lsfq_mem[i][0], M);
+     dec_cng(&state->dec_cng, state->past_ftyp, state->sid_sav, &parm[-1], state->exc, state->lsp_old,
+                A_t, &state->seed, lsfq_mem);
+     //update_decfreq_prev(&state->lsp_state, &lsfq_mem[i][0], MA_NP);
+     for (i=0; i<MA_NP; i++) copy(&lsfq_mem[i][0], &state->lsp_state.freq_prev[i][0], M);
+     Az = A_t;
+     for (i_subfr = 0; i_subfr < L_FRAME; i_subfr += L_SUBFR) {
+          syn_filt(Az, state->exc[i_subfr], &synth[i_subfr], L_SUBFR, state->mem_syn, 0); //Overflow ???
+          copy(synth[i_subfr+L_SUBFR-M], state->mem_syn, M);
+          Az += MP1;
+          *T2++ = state->old_T0;
+     }
+     sharp = SHARPMIN;
+   }
+   /* Processing active frame */
+   else {
+
+    st->seed = INIT_SEED;
+    parm++;
    /* Decode the LSPs */
 
-   d_lsp(&state->lsp_dec, parm, lsp_new, bfi+state->bad_lsf );
+   d_lsp(&state->lsp_state, parm, lsp_new, bfi+state->bad_lsf );
    parm += 2;                        /* Advance synthesis parameters pointer */
 
   /*
@@ -241,6 +277,17 @@ void decod_ld8a(decoder_state *state,
 
       Az  += MP1;        /* interpolated LPC parameters for next subframe */
    }
+}
+  /*------------*
+   *  For G729b
+   *-----------*/
+   if(bfi == 0) {
+       state->sid_sav = (FLOAT)0.0;
+       for(i=0; i<L_FRAME; i++) {
+           state->sid_sav += state->exc[i] * state->exc[i];
+       }
+   }
+   state->past_ftyp = ftyp;
 
   /*--------------------------------------------------*
    * Update signal for next frame.                    *

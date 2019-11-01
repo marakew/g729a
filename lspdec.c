@@ -1,7 +1,5 @@
 /*
-   ITU-T G.729 Annex C - Reference C code for floating point
-                         implementation of G.729
-                         Version 1.01 of 15.September.98
+  ITU-T G.729A Speech Coder with Annex B    ANSI-C Source Code
 */
 
 /*
@@ -15,24 +13,13 @@
 ----------------------------------------------------------------------
 */
 
-/*
- File : LSPDEC.C
- Used for the floating point version of both
- G.729 main body and G.729A
-*/
 #include <math.h>
 #include "typedef.h"
-#include "version.h"
-#ifdef VER_G729A
- #include "ld8a.h"
- #include "tab_ld8a.h"
-#else
- #include "ld8k.h"
- #include "tab_ld8k.h"
-#endif
+#include "ld8a.h"
+#include "tab_ld8a.h"
 
 /* Prototype definitions of static functions */
-static void lsp_iqua_cs(lsp_decw *l, int prm[], FLOAT lsp[], int erase);
+static void lsp_iqua_cs(lsp_dec *state, int prm[], FLOAT lsp[], int erase);
 
 /* static memory */
 static FLOAT freq_prev_reset[M] = {  /* previous LSP vector(init) */
@@ -44,16 +31,16 @@ static FLOAT freq_prev_reset[M] = {  /* previous LSP vector(init) */
  * Lsp_decw_reset -   set the previous LSP vectors
  *----------------------------------------------------------------------------
  */
-void lsp_decw_reset(lsp_decw *l)
+void lsp_decw_reset(lsp_dec *state)
 {
    int  i;
 
    for(i=0; i<MA_NP; i++)
-     copy (freq_prev_reset, &l->freq_prev[i][0], M );
+     copy (freq_prev_reset, &state->freq_prev[i][0], M );
 
-   l->prev_ma = 0;
+   state->prev_ma = 0;
 
-   copy (freq_prev_reset, l->prev_lsp, M );
+   copy (freq_prev_reset, state->prev_lsp, M );
 
    return;
 }
@@ -63,7 +50,8 @@ void lsp_decw_reset(lsp_decw *l)
  * lsp_iqua_cs -  LSP main quantization routine
  *----------------------------------------------------------------------------
  */
-static void lsp_iqua_cs(lsp_decw *l,
+static void lsp_iqua_cs(
+ lsp_dec *state,
  int    prm[],          /* input : codes of the selected LSP */
  FLOAT  lsp_q[],        /* output: Quantized LSP parameters  */
  int    erase           /* input : frame erase information   */
@@ -84,19 +72,19 @@ static void lsp_iqua_cs(lsp_decw *l,
         code2 = prm[1] & (INT16)(NC1 - 1);
 
         lsp_get_quant(lspcb1, lspcb2, code0, code1, code2, fg[mode_index],
-              l->freq_prev, lsp_q, fg_sum[mode_index]);
+              state->freq_prev, lsp_q, fg_sum[mode_index]);
 
-        copy(lsp_q, l->prev_lsp, M );
-        l->prev_ma = mode_index;
+        copy(lsp_q, state->prev_lsp, M );
+        state->prev_ma = mode_index;
      }
    else                         /* Frame erased */
      {
-       copy(l->prev_lsp, lsp_q, M );
+       copy(state->prev_lsp, lsp_q, M );
 
         /* update freq_prev */
-       lsp_prev_extract(l->prev_lsp, buf,
-          fg[l->prev_ma], l->freq_prev, fg_sum_inv[l->prev_ma]);
-       lsp_prev_update(buf, l->freq_prev);
+       lsp_prev_extract(state->prev_lsp, buf,
+          fg[state->prev_ma], state->freq_prev, fg_sum_inv[state->prev_ma]);
+       lsp_prev_update(buf, state->freq_prev);
      }
      return;
 }
@@ -104,14 +92,14 @@ static void lsp_iqua_cs(lsp_decw *l,
  * d_lsp - decode lsp parameters
  *----------------------------------------------------------------------------
  */
-void d_lsp(lsp_decw *l,
+void d_lsp(lsp_dec *state,
     int     index[],    /* input : indexes                 */
     FLOAT   lsp_q[],    /* output: decoded lsp             */
     int     bfi         /* input : frame erase information */
 )
 {
 
-   lsp_iqua_cs(l, index, lsp_q,bfi); /* decode quantized information */
+   lsp_iqua_cs(state, index, lsp_q, bfi); /* decode quantized information */
 
    /* Convert LSFs to LSPs */
 

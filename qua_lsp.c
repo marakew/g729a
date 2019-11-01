@@ -1,7 +1,5 @@
 /*
-   ITU-T G.729 Annex C - Reference C code for floating point
-                         implementation of G.729
-                         Version 1.01 of 15.September.98
+  ITU-T G.729A Speech Coder with Annex B    ANSI-C Source Code
 */
 
 /*
@@ -15,27 +13,10 @@
 ----------------------------------------------------------------------
 */
 
-/*
- File : QUA_LSP.C
- Used for the floating point version of both
- G.729 main body and G.729A
-*/
-
-/*----------------------------------------------------------*
- *  qua_lsp.c                                               *
- *  ~~~~~~~~                                                *
- * Functions related to the quantization of LSP's           *
- *----------------------------------------------------------*/
 #include <math.h>
 #include "typedef.h"
-#include "version.h"
-#ifdef VER_G729A
- #include "ld8a.h"
- #include "tab_ld8a.h"
-#else
- #include "ld8k.h"
- #include "tab_ld8k.h"
-#endif
+#include "ld8a.h"
+#include "tab_ld8a.h"
 
 /* Prototype definitions of static functions */
 
@@ -53,7 +34,7 @@ static void lsp_select_2( FLOAT rbuf[], FLOAT   lspcb1[], FLOAT wegt[],
 static void lsp_last_select( FLOAT      tdist[MODE], int        *mode_index );
 static void lsp_get_tdist( FLOAT        wegt[], FLOAT   buf[],
                           FLOAT *tdist, FLOAT   rbuf[], FLOAT   fg_sum[] );
-static void lsp_qua_cs(lsp_encw *l, FLOAT *freq_in, FLOAT *freqout, int *cod);
+static void lsp_qua_cs(lsp_enc *state, FLOAT *freq_in, FLOAT *freqout, int *cod);
 
 
 /* static memory */
@@ -63,7 +44,8 @@ static FLOAT freq_prev_reset[M] = {  /* previous LSP vector(init) */
 };     /* PI*(float)(j+1)/(float)(M+1) */
 
 
-void qua_lsp(lsp_encw *l,
+void qua_lsp(
+  lsp_enc *state,
   FLOAT lsp[],       /* (i) : Unquantized LSP            */
   FLOAT lsp_q[],     /* (o) : Quantized LSP              */
   int ana[]          /* (o) : indexes                    */
@@ -75,7 +57,7 @@ void qua_lsp(lsp_encw *l,
 
   lsp_lsf(lsp, lsf, M);
 
-  lsp_qua_cs(l, lsf, lsf_q, ana );
+  lsp_qua_cs(state, lsf, lsf_q, ana );
 
   /* Convert LSFs to LSPs */
 
@@ -89,19 +71,20 @@ void qua_lsp(lsp_encw *l,
  *----------------------------------------------------------------------------
  */
 void lsp_encw_reset(
- lsp_encw *l
+ lsp_enc *state
 )
 {
    int  i;
    for(i=0; i<MA_NP; i++)
-     copy (&freq_prev_reset[0], &l->freq_prev[i][0], M );
+     copy (&freq_prev_reset[0], &state->freq_prev[i][0], M );
    return;
 }
 /*----------------------------------------------------------------------------
  * lsp_qua_cs - lsp quantizer
  *----------------------------------------------------------------------------
  */
-static void lsp_qua_cs(lsp_encw *l,
+static void lsp_qua_cs(
+ lsp_enc *state,
  FLOAT  *flsp_in,       /*  input : Original LSP parameters      */
  FLOAT  *lspq_out,       /*  output: Quantized LSP parameters     */
  int  *code             /*  output: codes of the selected LSP    */
@@ -112,7 +95,7 @@ static void lsp_qua_cs(lsp_encw *l,
    get_wegt( flsp_in, wegt );
 
    relspwed( flsp_in, wegt, lspq_out, lspcb1, lspcb2, fg,
-            l->freq_prev, fg_sum, fg_sum_inv, code);
+            state->freq_prev, fg_sum, fg_sum_inv, code);
    return;
 }
 /*----------------------------------------------------------------------------
@@ -366,3 +349,30 @@ static void get_wegt(
    return;
 }
 
+void get_freq_prev(lsp_enc *state, FLOAT x[MA_NP][M])
+{
+   int i;
+   for (i=0; i<MA_NP; i++)
+     copy(&state->freq_prev[i][0], &x[i][0], M);
+}
+
+void update_freq_prev(lsp_enc *state, FLOAT x[MA_NP][M])
+{
+   int i;
+   for (i=0; i<MA_NP; i++)
+     copy(&x[i][0], &state->freq_prev[i][0], M);
+}
+
+void get_decfreq_prev(lsp_dec *state, FLOAT x[MA_NP][M])
+{
+   int i;
+   for (i=0; i<MA_NP; i++)
+     copy(&state->freq_prev[i][0], &x[i][0], M);
+}
+
+void update_decfreq_prev(lsp_dec *state, FLOAT x[MA_NP][M])
+{
+   int i;
+   for (i=0; i<MA_NP; i++)
+     copy(&x[i][0], &state->freq_prev[i][0], M);
+}

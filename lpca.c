@@ -1,7 +1,5 @@
 /*
-   ITU-T G.729 Annex C - Reference C code for floating point
-                         implementation of G.729 Annex A
-                         Version 1.01 of 15.September.98
+  ITU-T G.729A Speech Coder with Annex B    ANSI-C Source Code
 */
 
 /*
@@ -12,12 +10,6 @@
    Copyright (C) 1998, AT&T, France Telecom, NTT, University of
    Sherbrooke.  All rights reserved.
 ----------------------------------------------------------------------
-*/
-
-/*
- File : LPCA.C
- Used for the floating point version of G.729A only
- (not for G.729 main body)
 */
 
 /*****************************************************************************/

@@ -1,7 +1,5 @@
 /*
-   ITU-T G.729 Annex C - Reference C code for floating point
-                         implementation of G.729 Annex A
-                         Version 1.01 of 15.September.98
+  ITU-T G.729A Speech Coder with Annex B    ANSI-C Source Code
 */
 
 /*
@@ -13,12 +11,6 @@
    Sherbrooke.  All rights reserved.
 
 ----------------------------------------------------------------------
-*/
-
-/*
- File : COD_LD8A.C
- Used for the floating point version of G.729A only
- (not for G.729 main body)
 */
 
 /*-----------------------------------------------------------------*
@@ -131,8 +123,16 @@ void init_coder_ld8a(encoder_state *state)
    copy(lsp_old, state->lsp_old, M);
    copy(state->lsp_old, state->lsp_old_q, M);
 
-   lsp_encw_reset(&state->lsp_enc);
-   init_exc_err(state->exc_err);
+   lsp_encw_reset(&state->lsp_state);
+   init_exc_err(state->cng_state.exc_err);
+
+   /* For G.729B */
+   /* Initialize VAD/DTX parameters */
+   state->seed = INIT_SEED;
+   state->pastVad = 1;
+   state->ppastVad = 1;
+   vad_init(&state->vad_state);
+   init_lsfq_noise(state->cng_state.noise_fg);
 
    copy(past_qua_en, state->past_qua_en, M);
    return;
@@ -158,7 +158,9 @@ void init_coder_ld8a(encoder_state *state)
  *-----------------------------------------------------------------*/
 
 void coder_ld8a(encoder_state *state,
- int ana[]                   /* output: analysis parameters */
+ int ana[],                   /* output: analysis parameters */
+ int frame,                   /* input : frame counter */
+ int dtx_enable               /* input : DTX enable flag */
 )
 {
    /* LPC coefficients */
@@ -202,16 +204,85 @@ void coder_ld8a(encoder_state *state,
      FLOAT lsp_new[M];                /* lsp coefficients       */
      FLOAT lsp_new_q[M];              /* Quantized lsp coeff.   */
 
+
+     /* For G.729B */
+     FLOAT r_nbe[MP1];
+     FLOAT lsfq_mem[MA_NP][M];
+     int Vad;
+     FLOAT Energy_db;
+
      /* LP analysis */
 
      autocorr(state->p_window, M, r);             /* Autocorrelations */
+     copy(rh_nbe, r, MP1);
      lag_window(M, r);                     /* Lag windowing    */
      levinson(r, Ap_t, rc);                /* Levinson Durbin  */
      az_lsp(Ap_t, lsp_new, state->lsp_old);       /* Convert A(z) to lsp */
 
+     if (dtx_enable == 1)
+     {
+	lsp_lsf(lsp_new, lsf_new, M);
+	vad(&state->vad_state, rc[1], lsf_new, r, state->p_window, frame, state->pastVad, state->ppastVad, &Vad, &Energy_db);
+	update_cng(&state->cng_state, r_nbe, Vad);
+     } else Vad = 1;
+
+    /* ---------------------- */
+    /* Case of Inactive frame */
+    /* ---------------------- */
+    if (Vad == 0)
+    {
+        //get_freq_prev(&state->lsp_state, &lsfq_mem[i][0], MA_NP);
+        for (i=0; i<MA_NP; i++) copy(&state->lsp_state.freq_prev[i][0], &lsfq_mem[i][0], M);
+        cod_cng(&state->cng_state, state->exc, state->pastVad, state->lsp_old_q, Aq_t,
+                        ana, lsfq_mem, &state->seed);
+
+        //update_freq_prev(&state->lsp_state, &lsfq_mem[i][0], MA_NP);
+        for (i=0; i<MA_NP; i++) copy(&lsfq_mem[i][0], &state->lsp_state.freq_prev[i][0], M);
+        state->ppastVad = state->pastVad;
+        state->pastVad = Vad;
+
+        /* Update wsp, mem_w and mem_w0 */
+        Aq = Aq_t;
+        for (i_subfr = 0; i_subfr < L_FRAME; i_subfr += L_SUBFR) {
+          residu(Aq, &state->speech[i_subfr], xn, L_SUBFR);
+          weight_Az(Aq, GAMMA1, M, Ap_t);
+
+          /* Compute wsp and mem_w */
+          Ap = Ap_t + MP1;
+          Ap[0] = 4096;
+          for (i = 1; i <= M; i++)
+             Ap[i] = Ap_t[i] - (F)0.7 * Ap_t[i-1];
+          syn_filt(Ap, xn, &state->wsp[i_subfr], L_SUBFR, state->mem_w, 1);
+
+          /* Compute mem_w0 */
+          for (i = 0; i < L_SUBFR; i++)
+             xn[i] = xn[i] - state->exc[i_subfr+i];  /* residu[] - exc[] */
+          syn_filt(Ap_t, xn, xn, L_SUBFR, state->mem_w0, 1);
+          Aq += MP1;
+        }
+
+        state->sharp = SHARPMIN;
+
+        /* Update memories for next frames */
+        copy(&state->old_speech[L_FRAME], &state->old_speech[0], L_TOTAL-L_FRAME);
+        copy(&state->old_wsp[L_FRAME], &state->old_wsp[0], PIT_MAX);
+        copy(&state->old_exc[L_FRAME], &state->old_exc[0], PIT_MAX+L_INTERPOL);
+        return;
+    } /* End of inactive frame case */
+
+    /* -------------------- */
+    /* Case of Active frame */
+    /* -------------------- */
+
+    /* Case of active frame */
+    *ana++ = 1;
+    state->seed = INIT_SEED;
+    state->ppastVad = state->pastVad;
+    state->pastVad = Vad;
+
      /* LSP quantization */
 
-     qua_lsp(&state->lsp_enc, lsp_new, lsp_new_q, ana);
+     qua_lsp(&state->lsp_state, lsp_new, lsp_new_q, ana);
      ana += 2;                        /* Advance analysis parameters pointer */
 
     /*--------------------------------------------------------------------*

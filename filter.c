@@ -1,7 +1,5 @@
 /*
-   ITU-T G.729 Annex C - Reference C code for floating point
-                         implementation of G.729
-                         Version 1.01 of 15.September.98
+  ITU-T G.729A Speech Coder with Annex B    ANSI-C Source Code
 */
 
 /*
@@ -15,23 +13,12 @@
 ----------------------------------------------------------------------
 */
 
-/*
- File : FILTER.C
- Used for the floating point version of both
- G.729 main body and G.729A
-*/
-
 /***************************************/
 /* General filter routines             */
 /***************************************/
 
 #include "typedef.h"
-#include "version.h"
-#ifdef VER_G729A
- #include "ld8a.h"
-#else
- #include "ld8k.h"
-#endif
+#include "ld8a.h"
 
 /*-----------------------------------------------------------*
  * convolve - convolve vectors x and h and put result in y   *

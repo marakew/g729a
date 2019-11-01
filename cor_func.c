@@ -1,7 +1,5 @@
 /*
-   ITU-T G.729 Annex C - Reference C code for floating point
-                         implementation of G.729
-                         Version 1.01 of 15.September.98
+  ITU-T G.729A Speech Coder with Annex B    ANSI-C Source Code
 */
 
 /*
@@ -15,21 +13,10 @@
 ----------------------------------------------------------------------
 */
 
-/*
- File : COR_FUNC.C
- Used for the floating point version of both
- G.729 main body and G.729A
-*/
-
 /* Functions corr_xy2() and cor_h_x()   */
 
 #include "typedef.h"
-#include "version.h"
-#ifdef VER_G729A
- #include "ld8a.h"
-#else
- #include "ld8k.h"
-#endif
+#include "ld8a.h"
 
 /*----------------------------------------------------------------------------
  * corr_xy2 - compute the correlation products needed for gain computation

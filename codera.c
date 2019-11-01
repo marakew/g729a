@@ -1,56 +1,33 @@
-/*
-   ITU-T G.729 Annex C - Reference C code for floating point
-                         implementation of G.729 Annex A
-                         Version 1.01 of 15.September.98
-*/
-
-/*
-----------------------------------------------------------------------
-                    COPYRIGHT NOTICE
-----------------------------------------------------------------------
-   ITU-T G.729 Annex C ANSI C source code
-   Copyright (C) 1998, AT&T, France Telecom, NTT, University of
-   Sherbrooke.  All rights reserved.
-
-----------------------------------------------------------------------
-*/
-
-/*
- File : CODERA.C
- Used for the floating point version of G.729A only
- (not for G.729 main body)
-*/
 
 #include "typedef.h"
 #include "ld8a.h"
 
-/*-------------------------------------------------*
- * Initialization of the coder.                    *
- *-------------------------------------------------*/
-void g729a_init_encoder(encoder_state *state)
+void g729a_init_encoder(encoder_state *state, int dtx_enable)
 {
-   init_pre_process(&state->pre_process);
-   init_coder_ld8a(state);           /* Initialize the coder             */
+    state->frame = 0;
+    state->dtx_enable = dtx_enable;
+    init_pre_process(&state->pre_process);
+    init_coder_ld8a(state);
+    if (dtx_enable)
+	init_cod_cng(&state->cng_state);
 }
 
-/*---------------------------------------------------------------------*
- * L_FRAME data are read. (L_FRAME = number of speech data per frame)  *  
- * output PRM_SIZE int encoded data                                    *
- *---------------------------------------------------------------------*/
 int g729a_encoder(encoder_state *state, short *speech, unsigned char *bitstream, int *frame_size)
 {
-	INT16  i;
-  int prm[PRM_SIZE];           /* Transmitted parameters        */
+    INT16  i;
+    int prm[PRM_SIZE];
 
-    for (i = 0; i < L_FRAME; i++)  state->new_speech[i] = (FLOAT) speech[i];
+    for (i = 0; i < L_FRAME; i++) state->new_speech[i] = (FLOAT) speech[i];
 
     pre_process(&state->pre_process, state->new_speech, L_FRAME);
 
-    coder_ld8a(state, prm);
+    state->frame = (state->frame != 32768) ? state->frame+1 : 256;
+    coder_ld8a(state, prm, state->frame, state->dtx_enable);
 
-    prm2bits_ld8k(prm, bitstream);
-
-    *frame_size = 0;
+    if (prm[0])
+       prm2bits_ld8k(prm, bitstream, frame_size);
+    else
+      *frame_size = 0;
     return 0;
 }
 

@@ -1,7 +1,5 @@
 /*
-   ITU-T G.729 Annex C - Reference C code for floating point
-                         implementation of G.729 Annex A
-                         Version 1.01 of 15.September.98
+  ITU-T G.729A Speech Coder with Annex B    ANSI-C Source Code
 */
 
 /*
@@ -14,13 +12,6 @@
 
 ----------------------------------------------------------------------
 */
-
-/*------------------------------------------------------------------------*
- *                         POSTFILTER.C                                   *
- *------------------------------------------------------------------------*
- * Performs adaptive postfiltering on the synthesis speech                *
- * This file contains all functions related to the post filter.           *
- *------------------------------------------------------------------------*/
 
 #include <math.h>
 #include "typedef.h"
@@ -97,7 +88,8 @@ void init_post_filter(post_filter *f)
 void post_filter(post_filer *f,
   FLOAT *syn,     /* in/out: synthesis speech (postfiltered is output)    */
   FLOAT *az_4,    /* input : interpolated LPC parameters in all subframes */
-  int *T          /* input : decoded pitch lags in all subframes          */
+  int *T,          /* input : decoded pitch lags in all subframes          */
+  int *Vad         /* input: decoded frame type                            */
 )
 {
   /*-------------------------------------------------------------------*
@@ -135,15 +127,18 @@ void post_filter(post_filer *f,
     /* Find weighted filter coefficients ap3[] and ap[4] */
 
     weight_az(az, GAMMA2_PST, M, ap3);
-    weight_az(az, GAMMA1_PST, M, ap4 );
+    weight_az(az, GAMMA1_PST, M, ap4);
 
     /* filtering of synthesis speech by A(z/GAMMA2_PST) to find res2[] */
 
     residu(ap3, &syn[i_subfr], f->res2, L_SUBFR);
 
     /* pitch postfiltering */
-
-    pit_pst_filt(f->res2, t0_min, t0_max, L_SUBFR, res2_pst);
+    if (Vad == 1)
+      pit_pst_filt(f->res2, t0_min, t0_max, L_SUBFR, res2_pst);
+    else
+      for (i=0; i<L_SUBFR; i++)
+        res2_pst[j] = state->res2[j];
 
     /* tilt compensation filter */
 
