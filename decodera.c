@@ -28,7 +28,7 @@
 /*-----------------------------------------------------------------*
  *           Initialization of decoder                             *
  *-----------------------------------------------------------------*/
-void va_g729a_init_decoder(decoder_state *state)
+void g729a_init_decoder(decoder_state *state)
 {  
 	int i;
 	for (i=0; i<M; i++) state->synth_buf[i] = (F)0.0;
@@ -45,7 +45,7 @@ void va_g729a_init_decoder(decoder_state *state)
  * synth_short buffer space length (>=L_FRAME sizeof(short) bytes) *                             *
  * bad frame indicator (bfi)							           *
  *-----------------------------------------------------------------*/
-void va_g729a_decoder(decoder_state *state, unsigned char * bitstream, short *synth_short, int bfi)
+int g729a_decoder(decoder_state *state, unsigned char * bitstream, short *synth_short, int frame_size)
 {
 	int  i; 
 	FLOAT temp;
@@ -53,15 +53,17 @@ void va_g729a_decoder(decoder_state *state, unsigned char * bitstream, short *sy
 	int T2[2];                       /* Decoded Pitch              */
 	int parm[PRM_SIZE+1];            /* Synthesis parameters */
 
+	if (frame_size != 2 && frame_size != 10)
+		return -1;
 
 	bits2prm_ld8k(bitstream, &parm[0]);	
-	parm[3] = check_parity_pitch(parm[2], parm[3] ); /* get parity check result */
+	parm[3] = check_parity_pitch(parm[2], parm[3]);	/* get parity check result */
 
-	decod_ld8a(state, parm, state->synth, Az_dec, T2);             /* decoder */
+	decod_ld8a(state, parm, state->synth, Az_dec, T2); /* decoder */
 
-	post_filter(&state->post_filter, state->synth, Az_dec, T2);                  /* Post-filter */
+	post_filter(&state->post_filter, state->synth, Az_dec, T2); /* Post-filter */
 
-	post_process(&state->post_process, state->synth, L_FRAME);                    /* Highpass filter */
+	post_process(&state->post_process, state->synth, L_FRAME); /* Highpass filter */
 
 	/*---------------------------------------------------------------*
 	 * writes a FLOAT array as a Short to a output buf    *
@@ -77,5 +79,7 @@ void va_g729a_decoder(decoder_state *state, unsigned char * bitstream, short *sy
 	        if (temp < (F)-32768.0 ) temp = (F)-32768.0;
 	        synth_short[i] = (INT16) temp;
 	}
+
+	return 0;
 }
 

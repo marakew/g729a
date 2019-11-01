@@ -27,7 +27,7 @@
 /*-------------------------------------------------*
  * Initialization of the coder.                    *
  *-------------------------------------------------*/
-void va_g729a_init_encoder(encoder_state *state)
+void g729a_init_encoder(encoder_state *state)
 {
    init_pre_process(&state->pre_process);
    init_coder_ld8a(state);           /* Initialize the coder             */
@@ -37,7 +37,7 @@ void va_g729a_init_encoder(encoder_state *state)
  * L_FRAME data are read. (L_FRAME = number of speech data per frame)  *  
  * output PRM_SIZE int encoded data                                    *
  *---------------------------------------------------------------------*/
-void va_g729a_encoder(encoder_state *state, short *speech, unsigned char *bitstream)
+int g729a_encoder(encoder_state *state, short *speech, unsigned char *bitstream, int *frame_size)
 {
 	INT16  i;
   int prm[PRM_SIZE];           /* Transmitted parameters        */
@@ -47,6 +47,10 @@ void va_g729a_encoder(encoder_state *state, short *speech, unsigned char *bitstr
     pre_process(&state->pre_process, state->new_speech, L_FRAME);
 
     coder_ld8a(state, prm);
+
     prm2bits_ld8k(prm, bitstream);
+
+    *frame_size = 0;
+    return 0;
 }
 
