@@ -74,12 +74,10 @@ void copy(
 
 /* Random generator  */
 
-INT16 random_g729(void)
+INT16 random_g729(INT16 *seed)
 {
-  static INT16 seed = 21845;
+  *seed = (INT16) (*seed * 31821L + 13849L);
 
-  seed = (INT16) (seed * 31821L + 13849L);
-
-  return(seed);
+  return(*seed);
 
 }

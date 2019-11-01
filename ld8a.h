@@ -195,6 +195,8 @@ struct decoder_state
   FLOAT gain_code;        /* Code gain                          */
   FLOAT gain_pitch;       /* Pitch gain                         */
 
+  INT16 seed_fer;
+
   int bad_lsf;		/* bad LSF indicator   */
 /*
    This variable should be always set to zero unless transmission errors
@@ -207,6 +209,7 @@ struct decoder_state
 */
 
   lsp_decw lsp_dec;
+
   FLOAT past_qua_en[4];
   filter post_process;
   post_filter post_filter;
@@ -239,6 +242,7 @@ struct encoder_state
   FLOAT  sharp;
 
   lsp_encw lsp_enc;
+
   FLOAT exc_err[4];
   FLOAT past_qua_en[4];
   filter pre_process;
@@ -279,8 +283,7 @@ void  decod_ld8a(decoder_state *state,
                                   parm[0] = bad frame indicator (bfi)  */
   FLOAT   synth[],     /* (o)   : synthesis speech                     */
   FLOAT   A_t[],       /* (o)   : decoded LP filter in 2 subframes     */
-  int *T2,              /* (o)   : decoded pitch lag in 2 subframes     */
-  int     bfi           /* (i)   :bad frame indicator (bfi)      */
+  int *T2              /* (o)   : decoded pitch lag in 2 subframes     */
 );
 
 /*-------------------------------*
@@ -293,6 +296,10 @@ void  lag_window(int m, FLOAT r[]);
 FLOAT levinson(FLOAT *a, FLOAT *r, FLOAT *r_c);
 
 void  az_lsp(FLOAT *a, FLOAT *lsp, FLOAT *old_lsp);
+
+void lsf_lsp(FLOAT *lsf, FLOAT *lsp, int m);
+
+void lsp_lsf(FLOAT *lsp, FLOAT *lsf, int m);
 
 void  int_qlpc(FLOAT lsp_new[], FLOAT lsp_old[], FLOAT a[]);
 

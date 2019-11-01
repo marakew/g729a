@@ -41,7 +41,7 @@ void autocorr(
      FLOAT *r               /* output: auto-correlation vector r[0:M]*/
 )
 {
-   static FLOAT y[L_WINDOW];  /* dynamic memory allocation is used in real time*/
+   FLOAT y[L_WINDOW];  /* dynamic memory allocation is used in real time*/
    FLOAT sum;
    int i, j;
 

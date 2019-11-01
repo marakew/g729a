@@ -110,14 +110,12 @@ void d_lsp(lsp_decw *l,
     int     bfi         /* input : frame erase information */
 )
 {
-   int i;
 
    lsp_iqua_cs(l, index, lsp_q,bfi); /* decode quantized information */
 
    /* Convert LSFs to LSPs */
 
-   for (i=0; i<M; i++ )
-     lsp_q[i] = (FLOAT)cos(lsp_q[i]);
+   lsf_lsp(lsp_q, lsp_q, M);
 
    return;
 }

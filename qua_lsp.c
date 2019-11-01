@@ -69,20 +69,17 @@ void qua_lsp(lsp_encw *l,
   int ana[]          /* (o) : indexes                    */
 )
 {
-  int i;
   FLOAT lsf[M], lsf_q[M];  /* domain 0.0<= lsf <PI */
 
   /* Convert LSPs to LSFs */
 
-  for (i=0; i<M; i++ )
-     lsf[i] = (FLOAT)acos(lsp[i]);
+  lsp_lsf(lsp, lsf, M);
 
   lsp_qua_cs(l, lsf, lsf_q, ana );
 
   /* Convert LSFs to LSPs */
 
-  for (i=0; i<M; i++ )
-     lsp_q[i] = (FLOAT)cos(lsf_q[i]);
+  lsf_lsp(lsf_q, lsp_q, M);
 
   return;
 }

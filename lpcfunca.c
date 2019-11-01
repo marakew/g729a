@@ -95,6 +95,40 @@ static void get_lsp_pol(
   }
   return;
 }
+
+/*----------------------------------------------------------------------------
+* lsf_lsp - convert from lsf[0..M-1 to lsp[0..M-1]
+*----------------------------------------------------------------------------
+*/
+void lsf_lsp(
+    FLOAT lsf[],          /* input :  lsf */
+    FLOAT lsp[M],          /* output: lsp */
+    int m
+)
+{
+    int     i;
+    for ( i = 0; i < m; i++ )
+        lsp[i] = (FLOAT)cos((double)lsf[i]);
+    return;
+}
+
+/*----------------------------------------------------------------------------
+* lsp_lsf - convert from lsp[0..M-1 to lsf[0..M-1]
+*----------------------------------------------------------------------------
+*/
+void lsp_lsf(
+    FLOAT lsp[],          /* input :  lsp coefficients */
+    FLOAT lsf[],          /* output:  lsf (normalized frequencies */
+    int m
+)
+{
+    int     i;
+    
+    for ( i = 0; i < m; i++ )
+        lsf[i] = (FLOAT)acos((double)lsp[i]);
+    return;
+}
+
 /*---------------------------------------------------------------------------
  * weight_az:  Weighting of LPC coefficients  ap[i]  =  a[i] * (gamma ** i)
  *---------------------------------------------------------------------------

@@ -34,7 +34,6 @@ void va_g729a_init_decoder(decoder_state *state)
 	for (i=0; i<M; i++) state->synth_buf[i] = (F)0.0;
 	state->synth = state->synth_buf + M;
 
-	state->bad_lsf = 0;          /* Initialize bad LSF indicator */
 	init_decod_ld8a(state);
 	init_post_filter(&state->post_filter);
 	init_post_process(&state->post_process);
@@ -58,7 +57,7 @@ void va_g729a_decoder(decoder_state *state, unsigned char * bitstream, short *sy
 	bits2prm_ld8k(bitstream, &parm[0]);	
 	parm[3] = check_parity_pitch(parm[2], parm[3] ); /* get parity check result */
 
-	decod_ld8a(state, parm, state->synth, Az_dec, T2, bfi);             /* decoder */
+	decod_ld8a(state, parm, state->synth, Az_dec, T2);             /* decoder */
 
 	post_filter(&state->post_filter, state->synth, Az_dec, T2);                  /* Post-filter */
 

@@ -75,7 +75,13 @@ void init_decod_ld8a(decoder_state *state)
 
   lsp_decw_reset(&state->lsp_dec);
 
+  copy(lsp_old, state->lsp_old, M);
+
+  state->seed_fer = 21845;
+
   copy(past_qua_en, state->past_qua_en, M);
+
+  state->bad_lsf = 0;          /* Initialize bad LSF indicator */
   return;
 }
 
@@ -87,11 +93,11 @@ void init_decod_ld8a(decoder_state *state)
  *-----------------------------------------------------------------*/
 
 void decod_ld8a(decoder_state *state,
-  int      parm[],      /* (i)   : vector of synthesis parameters      */
+  int      parm[],      /* (i)   : vector of synthesis parameters      
+				  parm[0] = bad frame indicator (bfi)  */
   FLOAT   synth[],     /* (o)   : synthesis speech                     */
   FLOAT   A_t[],       /* (o)   : decoded LP filter in 2 subframes     */
-  int     *T2,          /* (o)   : decoded pitch lag in 2 subframes     */
-  int     bfi           /* (i)   :bad frame indicator (bfi)      */
+  int     *T2          /* (o)   : decoded pitch lag in 2 subframes     */
 )
 {
   FLOAT   *Az;                  /* Pointer on A_t   */
@@ -102,7 +108,11 @@ void decod_ld8a(decoder_state *state,
 
    int i, i_subfr;
    int T0, T0_frac, index;
-   int  bad_pitch; //bfi, 
+   int  bfi, bad_pitch;
+
+   /* Test bad frame indicator (bfi) */
+
+   bfi = *parm++;
 
    /* Decode the LSPs */
 
@@ -194,8 +204,8 @@ void decod_ld8a(decoder_state *state,
 
       if(bfi != 0)        /* Bad frame */
       {
-        parm[0] = random_g729() & (INT16)0x1fff;     /* 13 bits random */
-        parm[1] = random_g729() & (INT16)0x000f;     /*  4 bits random */
+        parm[0] = random_g729(&state->seed_fer) & (INT16)0x1fff;     /* 13 bits random */
+        parm[1] = random_g729(&state->seed_fer) & (INT16)0x000f;     /*  4 bits random */
       }
 
       decod_ACELP(parm[1], parm[0], code);

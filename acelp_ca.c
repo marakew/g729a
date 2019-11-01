@@ -65,8 +65,8 @@ int ACELP_code_A(       /* (o) :index of pulses positions    */
 )
 {
   int i, index;
-  static FLOAT Dn[L_SUBFR]; /* "static" to avoid stack overflow on PC */
-  static FLOAT rr[DIM_RR];  /* "static" to avoid stack overflow on PC */
+  FLOAT Dn[L_SUBFR]; /* "static" to avoid stack overflow on PC */
+  FLOAT rr[DIM_RR];  /* "static" to avoid stack overflow on PC */
 
  /*-----------------------------------------------------------------*
   * Include fixed-gain pitch contribution into impulse resp. h[]    *
