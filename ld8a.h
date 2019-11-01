@@ -545,7 +545,7 @@ void  corr_xy2(FLOAT xn[], FLOAT y1[], FLOAT y2[], FLOAT g_coeff[]);
 /*-----------------------*
  * Bitstream function    *
  *-----------------------*/
-void  prm2bits_ld8k(int prm[], unsigned char * bits, int frame_size);
+void  prm2bits_ld8k(int prm[], unsigned char * bits, int *frame_size);
 
 void  bits2prm_ld8k(unsigned char * bits, int prm[], int frame_size);
 

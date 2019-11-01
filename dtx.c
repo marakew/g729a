@@ -101,7 +101,7 @@ void cod_cng(
 
     /* if first frame of silence => SID frame */
     if(pastVad != 0) {
-        ana[0] = 1;
+        ana[0] = 2;
         state->count_fr0 = 0;
         state->nb_ener = 1;
         qua_Sidgain(state->ener, state->nb_ener, &energyq, &cur_igain);
@@ -126,7 +126,7 @@ void cod_cng(
         }
         else {
             if(state->flag_chang != 0) {
-                ana[0] = 1;             /* transmit SID frame */
+                ana[0] = 2;             /* transmit SID frame */
             }
             else{
                 ana[0] = 0;
@@ -135,7 +135,7 @@ void cod_cng(
         }
     }
 
-    if(ana[0] == 1) {
+    if(ana[0] == 2) {
 
         /* Reset frame count and change flag */
         state->count_fr0 = 0;
