@@ -163,7 +163,6 @@ int main(int argc, char *argv[])
 
 	fclose(f_syn);
 	fclose(f_serial);
-
 	return 0;
 }
 #endif
