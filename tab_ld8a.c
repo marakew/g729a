@@ -2480,5 +2480,12 @@ int  bitsno[PRM_SIZE] = {8,              /* MA + 1st stage */
                                5,    13,4, 7}; /* second subframe */
 
 
+        /* LSP Line spectral frequencies */
+
+FLOAT lsp_old[M] =
+     { (F)0.9595,  (F)0.8413,  (F)0.6549,  (F)0.4154,  (F)0.1423,
+      (F)-0.1423, (F)-0.4154, (F)-0.6549, (F)-0.8413, (F)-0.9595};
+
+FLOAT past_qua_en[4]={(F)-14.0,(F)-14.0,(F)-14.0,(F)-14.0};
 
 

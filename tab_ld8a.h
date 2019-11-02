@@ -38,3 +38,5 @@ extern FLOAT a100[3];
 extern FLOAT b140[3];
 extern FLOAT a140[3];
 extern int  bitsno[PRM_SIZE];
+extern FLOAT lsp_old[M];
+extern FLOAT past_qua_en[4];
