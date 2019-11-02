@@ -210,6 +210,7 @@ void coder_ld8a(encoder_state *state,
 
      /* For G.729B */
      FLOAT r_nbe[MP1];
+     FLOAT lsf_new[M];
      FLOAT lsfq_mem[MA_NP][M];
      int Vad;
      FLOAT Energy_db;
@@ -217,7 +218,7 @@ void coder_ld8a(encoder_state *state,
      /* LP analysis */
 
      autocorr(state->p_window, M, r);             /* Autocorrelations */
-     copy(rh_nbe, r, MP1);
+     copy(r_nbe, r, MP1);
      lag_window(M, r);                     /* Lag windowing    */
      levinson(r, Ap_t, rc);                /* Levinson Durbin  */
      az_lsp(Ap_t, lsp_new, state->lsp_old);       /* Convert A(z) to lsp */
