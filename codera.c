@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 
 	if (argc != 4)
 	{
-		printf("Usage :%s  speech_file  bitstream_file \n", argv[0]);
+		printf("Usage: coder speech_file  bitstream_file \n");
 		printf("\n");
 		printf("Format for speech_file:\n");
 		printf("  Speech is read form a binary file of 16 bits data.\n");

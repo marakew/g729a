@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
 
 	if (argc != 3)
 	{
-		printf("Usage :%s bitstream_file  outputspeech_file\n", argv[0]);
+		printf("Usage: decoder bitstream_file  outputspeech_file\n");
 		printf("\n");
 		printf("Format for bitstream_file:\n");
 #ifdef TEST_CONTROL
@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
 		int parm[PRM_SIZE+2];
 	        int Vad;
 
-		param[1] = 1; //voice frame
+		parm[1] = 1; //voice frame
 
 		bits2prm_ld8k(&serial[2], &parm[2]);
 
