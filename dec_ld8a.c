@@ -141,8 +141,8 @@ void decod_ld8a(decoder_state *state,
      for (i=0; i<MA_NP; i++) copy(&lsfq_mem[i][0], &state->lsp_state.freq_prev[i][0], M);
      Az = A_t;
      for (i_subfr = 0; i_subfr < L_FRAME; i_subfr += L_SUBFR) {
-          syn_filt(Az, state->exc[i_subfr], &synth[i_subfr], L_SUBFR, state->mem_syn, 0); //Overflow ???
-          copy(synth[i_subfr+L_SUBFR-M], state->mem_syn, M);
+          syn_filt(Az, &state->exc[i_subfr], &synth[i_subfr], L_SUBFR, state->mem_syn, 0); //Overflow ???
+          copy(&synth[i_subfr+L_SUBFR-M], state->mem_syn, M);
           Az += MP1;
           *T2++ = state->old_T0;
      }
@@ -264,7 +264,7 @@ void decod_ld8a(decoder_state *state,
        * - Update pitch sharpening "sharp" with quantized gain_pitch *
        *-------------------------------------------------------------*/
 
-      state->sharp = gain_pitch;
+      state->sharp = state->gain_pitch;
       if (state->sharp > SHARPMAX) state->sharp = SHARPMAX;
       if (state->sharp < SHARPMIN) state->sharp = SHARPMIN;
 
@@ -276,7 +276,7 @@ void decod_ld8a(decoder_state *state,
       for (i = 0; i < L_SUBFR;  i++)
          state->exc[i+i_subfr] = state->gain_pitch*state->exc[i+i_subfr] + state->gain_code*code[i];
 
-      syn_filt(Az, &state->exc[i_subfr], &state->synth[i_subfr], L_SUBFR, state->mem_syn, 1);
+      syn_filt(Az, &state->exc[i_subfr], &synth[i_subfr], L_SUBFR, state->mem_syn, 1);
 
       Az  += MP1;        /* interpolated LPC parameters for next subframe */
    }
