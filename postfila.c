@@ -141,7 +141,7 @@ void post_filter(
       pit_pst_filt(state->res2, t0_min, t0_max, L_SUBFR, res2_pst);
     else
       for (i=0; i<L_SUBFR; i++)
-        res2_pst[j] = state->res2[j];
+        res2_pst[i] = state->res2[i];
 
     /* tilt compensation filter */
 
@@ -162,7 +162,7 @@ void post_filter(
     else {
        temp2 = temp2*MU/temp1;
     }
-    preemphasis(f, res2_pst, temp2, L_SUBFR);
+    preemphasis(state, res2_pst, temp2, L_SUBFR);
 
     /* filtering through  1/A(z/GAMMA1_PST) */
 
@@ -293,7 +293,8 @@ static void pit_pst_filt(
  * Preemphasis: filtering through 1 - g z^-1                           *
  *---------------------------------------------------------------------*/
 
-static void preemphasis(post_filter_state *state,
+static void preemphasis(
+  post_filter_state *state,
   FLOAT *signal,    /* in/out: input signal overwritten by the output */
   FLOAT g,          /* input : preemphasis coefficient                */
   int L             /* input : size of filtering                      */
