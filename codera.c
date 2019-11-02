@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
 	/* For G.729B */
 	int dtx_enable;
 
-	if (argc != 3)
+	if (argc != 4)
 	{
 		printf("Usage :%s  speech_file  bitstream_file \n", argv[0]);
 		printf("\n");
