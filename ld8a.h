@@ -221,7 +221,7 @@ struct decoder_state
    (The flags should be set back to 0 for correct transmission).
 */
 
-  lsp_decw lsp_state;
+  lsp_dec lsp_state;
   dec_cng_state cng_state;
   FLOAT past_qua_en[4];
   filter post_process;
@@ -294,7 +294,7 @@ struct encoder_state
   int ppastVad;
   INT16 seed;
 
-  lsp_encw lsp_state;
+  lsp_enc lsp_state;
 
   enc_cng_state cng_state;
   vad_state vad_state;
