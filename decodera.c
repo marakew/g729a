@@ -49,3 +49,77 @@ int g729a_decoder(decoder_state *state, unsigned char * bitstream, short *synth_
 
 	return 0;
 }
+
+#ifdef TEST
+int main(int argc, char *argv[])
+{
+	decoder_state state;
+
+	FILE *f_serial;
+	FILE *f_syn;
+
+#ifdef TEST_CONTROL
+	static INT16 serial[SERIAL_SIZE];
+#else
+	static unsigned char serial[M];
+#endif
+	static INT16 synth[L_FRAME];
+
+	INT32   frame;
+	INT32	frame_size;
+
+	if (argc != 3)
+	{
+		printf("Usage :%s bitstream_file  outputspeech_file\n", argv[0]);
+		printf("\n");
+		printf("Format for bitstream_file:\n");
+#ifdef TEST_CONTROL
+		printf("  One word (2-bytes) to indicate erasure.\n");
+		printf("  One word (2 bytes) to indicate bit rate\n");
+		printf("  80 words (2-bytes) containing 80 bits.\n");
+#else
+		printf("  10 bytes - g729a parameters\n");
+#endif
+		printf("Format for outputspeech_file:\n");
+		printf("  Synthesis is written to a binary file of 16 bits PCM data.\n");
+		printf("\n");
+		return 1;
+	}
+
+	if ( (f_serial = fopen(argv[1], "rb")) == NULL) {
+		printf("%s - Error opening file  %s !!\n", argv[0], argv[1]);
+		exit(0);
+	}
+
+	printf(" Input bitstream file  :  %s\n", argv[1]);
+
+	if ( (f_syn = fopen(argv[2], "wb")) == NULL) {
+		printf("%s - Error opening file  %s !!\n", argv[0], argv[2]);
+		exit(0);
+	}
+
+	printf(" Synthesis speech file :  %s\n", argv[2]);
+
+	g729a_decoder_init(&state);
+
+	frame = 0;
+#ifdef TEST_CONTROL
+	while(fread((void *)serial, sizeof(INT16), SERIAL_SIZE, f_serial) == SERIAL_SIZE)
+#else
+	while(fread((void *)serial, sizeof(unsigned char), M, f_serial) == M)
+#endif
+	{
+		printf("Frame: %d\r", frame++);
+
+		frame_size = 10;
+		g729a_decoder(&state, serial, synth, frame_size);
+
+		fwrite((void *)synth, sizeof(INT16), L_FRAME, f_syn);
+	}
+
+	fclose(f_syn);
+	fclose(f_serial);
+
+	return 0;
+}
+#endif
