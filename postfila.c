@@ -88,11 +88,11 @@ void init_post_filter(post_filter_state *state)
  *------------------------------------------------------------------------*/
 
 void post_filter(
-  post_filer_state *state,
+  post_filter_state *state,
   FLOAT *syn,     /* in/out: synthesis speech (postfiltered is output)    */
   FLOAT *az_4,    /* input : interpolated LPC parameters in all subframes */
   int *T,          /* input : decoded pitch lags in all subframes          */
-  int *Vad         /* input: decoded frame type                            */
+  int Vad         /* input: decoded frame type                            */
 )
 {
   /*-------------------------------------------------------------------*
@@ -293,7 +293,7 @@ static void pit_pst_filt(
  * Preemphasis: filtering through 1 - g z^-1                           *
  *---------------------------------------------------------------------*/
 
-static void preemphasis(post_filer_state *state,
+static void preemphasis(post_filter_state *state,
   FLOAT *signal,    /* in/out: input signal overwritten by the output */
   FLOAT g,          /* input : preemphasis coefficient                */
   int L             /* input : size of filtering                      */
@@ -325,7 +325,7 @@ static void preemphasis(post_filer_state *state,
  *  gain[n] = AGC_FAC * gain[n-1] + (1 - AGC_FAC) g_in/g_out            *
  *----------------------------------------------------------------------*/
 
-static void agc(post_filer_state *state,
+static void agc(post_filter_state *state,
   FLOAT *sig_in,    /* input : postfilter input signal  */
   FLOAT *sig_out,   /* in/out: postfilter output signal */
   int l_trm         /* input : subframe size            */

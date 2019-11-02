@@ -589,7 +589,7 @@ void post_filter(
   FLOAT *syn,     /* in/out: synthesis speech (postfiltered is output)    */
   FLOAT *a_t,     /* input : interpolated LPC parameters in all subframes */
   int *T,          /* input : decoded pitch lags in all subframes          */
-  int *Vad        /* input : decoded frame type                    */
+  int Vad        /* input : decoded frame type                    */
 );
 
 /*------------------------------------------------------------*
