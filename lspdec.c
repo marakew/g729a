@@ -21,12 +21,6 @@
 /* Prototype definitions of static functions */
 static void lsp_iqua_cs(lsp_dec *state, int prm[], FLOAT lsp[], int erase);
 
-/* static memory */
-static FLOAT freq_prev_reset[M] = {  /* previous LSP vector(init) */
- (F)0.285599,  (F)0.571199,  (F)0.856798,  (F)1.142397,  (F)1.427997,
- (F)1.713596,  (F)1.999195,  (F)2.284795,  (F)2.570394,  (F)2.855993
-};     /* PI*(float)(j+1)/(float)(M+1) */
-
 /*----------------------------------------------------------------------------
  * Lsp_decw_reset -   set the previous LSP vectors
  *----------------------------------------------------------------------------

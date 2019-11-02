@@ -21,6 +21,7 @@ extern FLOAT fg[2][MA_NP][M];
 extern FLOAT fg_sum[2][M];
 extern FLOAT fg_sum_inv[2][M];
 extern FLOAT grid[GRID_POINTS+1];
+extern FLOAT freq_prev_reset[M];
 extern FLOAT inter_3l[FIR_SIZE_SYN];
 extern FLOAT pred[4];
 extern FLOAT gbk1[NCODE1][2];

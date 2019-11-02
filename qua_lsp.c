@@ -36,14 +36,6 @@ static void lsp_get_tdist( FLOAT        wegt[], FLOAT   buf[],
                           FLOAT *tdist, FLOAT   rbuf[], FLOAT   fg_sum[] );
 static void lsp_qua_cs(lsp_enc *state, FLOAT *freq_in, FLOAT *freqout, int *cod);
 
-
-/* static memory */
-static FLOAT freq_prev_reset[M] = {  /* previous LSP vector(init) */
- (F)0.285599,  (F)0.571199,  (F)0.856798,  (F)1.142397,  (F)1.427997,
- (F)1.713596,  (F)1.999195,  (F)2.284795,  (F)2.570394,  (F)2.855993
-};     /* PI*(float)(j+1)/(float)(M+1) */
-
-
 void qua_lsp(
   lsp_enc *state,
   FLOAT lsp[],       /* (i) : Unquantized LSP            */
