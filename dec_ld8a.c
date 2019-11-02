@@ -15,6 +15,9 @@
 
 #include "typedef.h"
 #include "ld8a.h"
+#include "tab_ld8a.h"
+#include "dtx.h"
+#include "sid.h"
 
 /*---------------------------------------------------------------*
  *   Decoder constant parameters (defined in "ld8a.h")           *

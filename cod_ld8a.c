@@ -41,7 +41,10 @@
 #include <math.h>
 #include "typedef.h"
 #include "ld8a.h"
-
+#include "vad.h"
+#include "dtx.h"
+#include "sid.h"
+#include "tab_ld8a.h"
 
 /*-----------------------------------------------------------*
  *    Coder constant parameters (defined in "ld8a.h")        *
@@ -245,7 +248,7 @@ void coder_ld8a(encoder_state *state,
         Aq = Aq_t;
         for (i_subfr = 0; i_subfr < L_FRAME; i_subfr += L_SUBFR) {
           residu(Aq, &state->speech[i_subfr], xn, L_SUBFR);
-          weight_Az(Aq, GAMMA1, M, Ap_t);
+          weight_az(Aq, GAMMA1, M, Ap_t);
 
           /* Compute wsp and mem_w */
           Ap = Ap_t + MP1;

@@ -19,6 +19,7 @@
  *   Compute the LPC coefficients from lsp (order=10)          *
  *-------------------------------------------------------------*/
 
+#include <math.h>
 #include "typedef.h"
 #include "ld8a.h"
 #include "tab_ld8a.h"

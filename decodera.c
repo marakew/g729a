@@ -1,6 +1,8 @@
 
 #include "typedef.h"
 #include "ld8a.h"
+#include "dtx.h"
+#include "octet.h"
 
 void g729a_init_decoder(decoder_state *state)
 {  
