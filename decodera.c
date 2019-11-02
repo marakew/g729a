@@ -7,12 +7,15 @@
 void g729a_decoder_init(decoder_state *state)
 {  
 	int i;
-	for (i=0; i<M; i++) state->synth_buf[i] = (F)0.0;
-	state->synth = state->synth_buf + M;
 
 	init_decod_ld8a(state);
 	init_post_filter(&state->post_filter_state);
 	init_post_process(&state->post_process);
+
+	for (i=0; i<M; i++) state->synth_buf[i] = (F)0.0;
+	state->synth = state->synth_buf + M;
+
+	init_dec_cng(&state->dec_cng);
 }
 
 int g729a_decoder(decoder_state *state, unsigned char * bitstream, short *synth_short, int frame_size)
