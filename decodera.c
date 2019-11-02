@@ -21,14 +21,13 @@ int g729a_decoder(decoder_state *state, unsigned char * bitstream, short *synth_
 	FLOAT temp;
 	FLOAT  Az_dec[MP1*2];
 	int T2[2];
-	int parm[PRM_SIZE+1];
+	int parm[PRM_SIZE+2];
         int Vad;
 
 	if (frame_size != 2 && frame_size != 10)
 		return -1;
 
 	bits2prm_ld8k(bitstream, &parm[0], frame_size);	
-	parm[3] = check_parity_pitch(parm[2], parm[3]);
 
 	decod_ld8a(state, parm, state->synth, Az_dec, T2, &Vad);
 

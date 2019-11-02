@@ -17,7 +17,7 @@ void g729a_encoder_init(encoder_state *state, int dtx_enable)
 int g729a_encoder(encoder_state *state, short *speech, unsigned char *bitstream, int *frame_size)
 {
     INT16  i;
-    int prm[PRM_SIZE];
+    int prm[PRM_SIZE+1];
 
     for (i = 0; i < L_FRAME; i++) state->new_speech[i] = (FLOAT) speech[i];
 
