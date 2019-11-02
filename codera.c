@@ -4,7 +4,7 @@
 #include "dtx.h"
 #include "octet.h"
 
-void g729a_init_encoder(encoder_state *state, int dtx_enable)
+void g729a_encoder_init(encoder_state *state, int dtx_enable)
 {
     state->frame = 0;
     state->dtx_enable = dtx_enable;

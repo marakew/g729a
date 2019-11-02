@@ -15,6 +15,10 @@ OBJS+=$(patsubst %.cpp,%.o,$(wildcard *.cpp))
 
 $(EXE):$(OBJS)
 	ar -crv libg729a.a $(OBJS)
+
+test:$(OBJS)
+	$(CC) $(CFLAG) -o test $(OBJS) -lm
+
 clean:
 	rm -rf *.o
 	rm -rf *.a

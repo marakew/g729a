@@ -74,13 +74,13 @@ void init_decod_ld8a(decoder_state *state)
   init_exc_err(state->cng_state.exc_err);
   copy(lsp_old, state->lsp_old, M);
 
-  state->seed_fer = 21845;
+  state->seed_fer = (INT16)21845;
   state->seed = INIT_SEED;
   state->past_ftyp = 1;
   state->sid_sav = (F)0.0;
   init_lsfq_noise(state->cng_state.noise_fg);
 
-  copy(past_qua_en, state->past_qua_en, M);
+  copy(past_qua_en, state->past_qua_en, 4);
 
   state->bad_lsf = 0;          /* Initialize bad LSF indicator */
   return;

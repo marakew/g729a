@@ -4,7 +4,7 @@
 #include "dtx.h"
 #include "octet.h"
 
-void g729a_init_decoder(decoder_state *state)
+void g729a_decoder_init(decoder_state *state)
 {  
 	int i;
 	for (i=0; i<M; i++) state->synth_buf[i] = (F)0.0;

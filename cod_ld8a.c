@@ -137,7 +137,7 @@ void init_coder_ld8a(encoder_state *state)
    vad_init(&state->vad_state);
    init_lsfq_noise(state->cng_state.noise_fg);
 
-   copy(past_qua_en, state->past_qua_en, M);
+   copy(past_qua_en, state->past_qua_en, 4);
    return;
 }
 
