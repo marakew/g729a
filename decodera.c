@@ -15,7 +15,7 @@ void g729a_decoder_init(decoder_state *state)
 	for (i=0; i<M; i++) state->synth_buf[i] = (F)0.0;
 	state->synth = state->synth_buf + M;
 
-	init_dec_cng(&state->dec_cng);
+	init_dec_cng(&state->cng_state);
 }
 
 int g729a_decoder(decoder_state *state, unsigned char * bitstream, short *synth_short, int frame_size)
