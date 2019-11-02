@@ -145,15 +145,15 @@ void vad(
             state->Prev_Min = norm_energy;
         }
         if( (frm_count % 8) == 0){
-            Min_buffer[(int)frm_count/8 -1] = state->Min;
+            state->Min_buffer[(int)frm_count/8 -1] = state->Min;
             state->Min = FLT_MAX_G729;
         }
     }
     if( (frm_count % 8) == 0){
-        state->Prev_Min = Min_buffer[0];
+        state->Prev_Min = state->Min_buffer[0];
         for ( i =1; i< 15; i++){
-            if ( Min_buffer[i] <  state->Prev_Min )
-                state->Prev_Min = Min_buffer[i];
+            if ( state->Min_buffer[i] <  state->Prev_Min )
+                state->Prev_Min = state->Min_buffer[i];
         }
     }
     
@@ -168,12 +168,12 @@ void vad(
             state->Next_Min = norm_energy;
         if( (frm_count % 8) == 0){
             for ( i =0; i< 15; i++)
-                Min_buffer[i] = Min_buffer[i+1];
-            Min_buffer[15]  = state->Next_Min;
-            state->Prev_Min = Min_buffer[0];
+                state->Min_buffer[i] = state->Min_buffer[i+1];
+            state->Min_buffer[15]  = state->Next_Min;
+            state->Prev_Min = state->Min_buffer[0];
             for ( i =1; i< 16; i++){
-                if ( Min_buffer[i] <  state->Prev_Min )
-                    state->Prev_Min = Min_buffer[i];
+                if ( state->Min_buffer[i] <  state->Prev_Min )
+                    state->Prev_Min = state->Min_buffer[i];
             }
             
         }
@@ -199,7 +199,7 @@ void vad(
         if (frm_count == INIT_FRAME ){
 #ifdef VAD_APPENDIX_II
           if (frm_count == INIT_FRAME && state->less_count >= INIT_FRAME){
-            state->frm_count = 0;
+            frm_count = 0;
             state->less_count = 0;
           }
 #endif
@@ -239,7 +239,7 @@ void vad(
         
         if((state->flag == 1) ){
             if( (pprev_marker == VOICE) && (prev_marker == VOICE) &&
-                (*marker == NOISE) && (fabs(prev_energy - norm_energy)<= (F)3.0)){
+                (*marker == NOISE) && (fabs(state->prev_energy - norm_energy)<= (F)3.0)){
                 state->count_ext++;
                 *marker = VOICE;
 #ifndef VAD_APPENDIX_II
@@ -257,10 +257,10 @@ void vad(
             state->flag =1;
         
         if(*marker == NOISE)
-            count_sil++;
+            state->count_sil++;
         
         if((*marker == VOICE) && (state->count_sil > 10) &&
-            ((norm_energy - prev_energy) <= (F)3.0)){
+            ((norm_energy - state->prev_energy) <= (F)3.0)){
             *marker = NOISE;
             state->count_sil=0;
 #ifdef VAD_APPENDIX_II
@@ -328,7 +328,7 @@ void vad(
         }
     }
   
-    prev_energy = norm_energy;
+    state->prev_energy = norm_energy;
     return;
 }
 
