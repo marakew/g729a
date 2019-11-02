@@ -551,6 +551,12 @@ void lsp_prev_update(
   FLOAT freq_prev[MA_NP][M]
 );
 
+void get_wegt( FLOAT flsp[], FLOAT wegt[] );
+
+void lsp_stability(FLOAT  buf[]);
+void lsp_prev_compose(FLOAT lsp_ele[],FLOAT lsp[],FLOAT fg[][M],
+            FLOAT freq_prev[][M], FLOAT fg_sum[]);
+
 /*--------------------------------------------------------------------------*
  * gain VQ functions.                                                       *
  *--------------------------------------------------------------------------*/

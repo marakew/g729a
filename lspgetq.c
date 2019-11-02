@@ -16,18 +16,6 @@
 #include "typedef.h"
 #include "ld8a.h"
 
-/* Prototype definitions of static functions */
-static void lsp_stability(
- FLOAT  buf[]           /*in/out: LSP parameters  */
-);
-static void lsp_prev_compose(
-  FLOAT lsp_ele[],
-  FLOAT lsp[],
-  FLOAT fg[][M],
-  FLOAT freq_prev[][M],
-  FLOAT fg_sum[]
-);
-
 /*----------------------------------------------------------------------------
  * lsp_get_quant - reconstruct quantized LSP parameter and check the stabilty
  *----------------------------------------------------------------------------
@@ -148,7 +136,7 @@ void lsp_expand_1_2(
 /*
   compose LSP parameter from elementary LSP with previous LSP.
 */
-static void lsp_prev_compose(
+void lsp_prev_compose(
   FLOAT lsp_ele[],             /* (i) Q13 : LSP vectors                 */
   FLOAT lsp[],                 /* (o) Q13 : quantized LSP parameters    */
   FLOAT fg[][M],               /* (i) Q15 : MA prediction coef.         */
@@ -208,7 +196,7 @@ void lsp_prev_update(
  * lsp_stability - check stability of lsp coefficients
  *----------------------------------------------------------------------------
  */
-static void lsp_stability(
+void lsp_stability(
  FLOAT  buf[]           /*in/out: LSP parameters  */
 )
 {

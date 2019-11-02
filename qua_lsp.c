@@ -20,7 +20,6 @@
 
 /* Prototype definitions of static functions */
 
-static void get_wegt( FLOAT     flsp[], FLOAT   wegt[] );
 static void relspwed( FLOAT *lsp, FLOAT wegt[M], FLOAT *lspq,
                      FLOAT lspcb1[][M], FLOAT lspcb2[][M],
                      FLOAT fg[MODE][MA_NP][M],
@@ -314,7 +313,7 @@ static void lsp_last_select(
  * get_wegt - compute lsp weights
  *----------------------------------------------------------------------------
  */
-static void get_wegt(
+void get_wegt(
  FLOAT  flsp[],         /* input : M LSP parameters */
  FLOAT  wegt[]          /* output: M weighting coefficients */
 )
