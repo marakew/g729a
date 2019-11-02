@@ -410,7 +410,7 @@ void coder_ld8a(encoder_state *state,
 
       /* clip pitch gain if taming is necessary */
 
-      taming = test_err(state->exc_err, T0, T0_frac);
+      taming = test_err(state->cng_state.exc_err, T0, T0_frac);
 
       if( taming == 1){
         if (gain_pit > GPCLIP) {
@@ -456,7 +456,7 @@ void coder_ld8a(encoder_state *state,
       for (i = 0; i < L_SUBFR;  i++)
         state->exc[i+i_subfr] = gain_pit*state->exc[i+i_subfr] + gain_code*code[i];
 
-      update_exc_err(state->exc_err, gain_pit, T0);
+      update_exc_err(state->cng_state.exc_err, gain_pit, T0);
 
       for (i = L_SUBFR-M, j = 0; i < L_SUBFR; i++, j++)
         state->mem_w0[j]  = xn[i] - gain_pit*y1[i] - gain_code*y2[i];
