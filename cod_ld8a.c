@@ -218,7 +218,7 @@ void coder_ld8a(encoder_state *state,
      /* LP analysis */
 
      autocorr(state->p_window, M, r);             /* Autocorrelations */
-     copy(r_nbe, r, MP1);
+     copy(r, r_nbe, MP1);
      lag_window(M, r);                     /* Lag windowing    */
      levinson(r, Ap_t, rc);                /* Levinson Durbin  */
      az_lsp(Ap_t, lsp_new, state->lsp_old);       /* Convert A(z) to lsp */
