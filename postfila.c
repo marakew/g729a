@@ -26,12 +26,14 @@ static void pit_pst_filt(
   int   L_subfr,        /* input : size of filtering                   */
   FLOAT *signal_pst     /* output: harmonically postfiltered signal    */
 );
-static void agc(post_filter *f,
+static void agc(
+  post_filter_state *state,
   FLOAT *sig_in,   /* input : postfilter input signal  */
   FLOAT *sig_out,  /* in/out: postfilter output signal */
   int l_trm        /* input : subframe size            */
 );
-static void preemphasis(post_filter *f,
+static void preemphasis(
+  post_filter_state *state,
   FLOAT *signal,   /* in/out: input signal overwritten by the output */
   FLOAT g,         /* input : preemphasis coefficient                */
   int L            /* input : size of filtering                      */
@@ -58,15 +60,15 @@ static void preemphasis(post_filter *f,
  *  Initializes the postfilter parameters:                       *
  *---------------------------------------------------------------*/
 
-void init_post_filter(post_filter *f)
+void init_post_filter(post_filter_state *state)
 {
 
-  f->res2  = f->res2_buf + PIT_MAX;
+  state->res2  = state->res2_buf + PIT_MAX;
 
-  set_zero(f->mem_syn_pst, M);
-  set_zero(f->res2_buf, PIT_MAX+L_SUBFR);
-  f->mem_pre = (F)0.;
-  f->past_gain = (F)1.0;
+  set_zero(state->mem_syn_pst, M);
+  set_zero(state->res2_buf, PIT_MAX+L_SUBFR);
+  state->mem_pre = (F)0.;
+  state->past_gain = (F)1.0;
   return;
 }
 
@@ -85,7 +87,8 @@ void init_post_filter(post_filter *f)
  *  - adaptive gain control                                               *
  *------------------------------------------------------------------------*/
 
-void post_filter(post_filer *f,
+void post_filter(
+  post_filer_state *state,
   FLOAT *syn,     /* in/out: synthesis speech (postfiltered is output)    */
   FLOAT *az_4,    /* input : interpolated LPC parameters in all subframes */
   int *T,          /* input : decoded pitch lags in all subframes          */
@@ -131,11 +134,11 @@ void post_filter(post_filer *f,
 
     /* filtering of synthesis speech by A(z/GAMMA2_PST) to find res2[] */
 
-    residu(ap3, &syn[i_subfr], f->res2, L_SUBFR);
+    residu(ap3, &syn[i_subfr], state->res2, L_SUBFR);
 
     /* pitch postfiltering */
     if (Vad == 1)
-      pit_pst_filt(f->res2, t0_min, t0_max, L_SUBFR, res2_pst);
+      pit_pst_filt(state->res2, t0_min, t0_max, L_SUBFR, res2_pst);
     else
       for (i=0; i<L_SUBFR; i++)
         res2_pst[j] = state->res2[j];
@@ -163,15 +166,15 @@ void post_filter(post_filer *f,
 
     /* filtering through  1/A(z/GAMMA1_PST) */
 
-    syn_filt(ap4, res2_pst, &syn_pst[i_subfr], L_SUBFR, f->mem_syn_pst, 1);
+    syn_filt(ap4, res2_pst, &syn_pst[i_subfr], L_SUBFR, state->mem_syn_pst, 1);
 
     /* scale output to input */
 
-    agc(f, &syn[i_subfr], &syn_pst[i_subfr], L_SUBFR);
+    agc(state, &syn[i_subfr], &syn_pst[i_subfr], L_SUBFR);
 
     /* update res2[] buffer;  shift by L_SUBFR */
 
-    copy(&f->res2[L_SUBFR-PIT_MAX], &f->res2[-PIT_MAX], PIT_MAX);
+    copy(&state->res2[L_SUBFR-PIT_MAX], &state->res2[-PIT_MAX], PIT_MAX);
 
     az += MP1;
   }
@@ -290,7 +293,7 @@ static void pit_pst_filt(
  * Preemphasis: filtering through 1 - g z^-1                           *
  *---------------------------------------------------------------------*/
 
-static void preemphasis(post_filer *f,
+static void preemphasis(post_filer_state *state,
   FLOAT *signal,    /* in/out: input signal overwritten by the output */
   FLOAT g,          /* input : preemphasis coefficient                */
   int L             /* input : size of filtering                      */
@@ -306,9 +309,9 @@ static void preemphasis(post_filer *f,
   for (i = 0; i <= L-2; i++) {
     *p1 -= g * (*p2--); p1--; }
 
-  *p1 = *p1 - g * f->mem_pre;
+  *p1 = *p1 - g * state->mem_pre;
 
-  f->mem_pre = temp;
+  state->mem_pre = temp;
 
   return;
 }
@@ -322,7 +325,7 @@ static void preemphasis(post_filer *f,
  *  gain[n] = AGC_FAC * gain[n-1] + (1 - AGC_FAC) g_in/g_out            *
  *----------------------------------------------------------------------*/
 
-static void agc(post_filer *f,
+static void agc(post_filer_state *state,
   FLOAT *sig_in,    /* input : postfilter input signal  */
   FLOAT *sig_out,   /* in/out: postfilter output signal */
   int l_trm         /* input : subframe size            */
@@ -337,7 +340,7 @@ static void agc(post_filer *f,
             gain_out += sig_out[i]*sig_out[i];
     }
     if(gain_out == (F)0.) {
-            f->past_gain = (F)0.;
+            state->past_gain = (F)0.;
             return;
     }
 
@@ -356,12 +359,12 @@ static void agc(post_filer *f,
     /* compute gain(n) = AGC_FAC gain(n-1) + (1-AGC_FAC)gain_in/gain_out */
     /* sig_out(n) = gain(n) sig_out(n)                         */
 
-    gain = f->past_gain;
+    gain = state->past_gain;
     for(i=0; i<l_trm; i++) {
             gain *= AGC_FAC;
             gain += g0;
             sig_out[i] *= gain;
     }
-    f->past_gain = gain;
+    state->past_gain = gain;
     return;
 }

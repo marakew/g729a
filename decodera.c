@@ -9,7 +9,7 @@ void g729a_init_decoder(decoder_state *state)
 	state->synth = state->synth_buf + M;
 
 	init_decod_ld8a(state);
-	init_post_filter(&state->post_filter);
+	init_post_filter(&state->post_filter_state);
 	init_post_process(&state->post_process);
 }
 
@@ -30,7 +30,7 @@ int g729a_decoder(decoder_state *state, unsigned char * bitstream, short *synth_
 
 	decod_ld8a(state, parm, state->synth, Az_dec, T2, &Vad);
 
-	post_filter(&state->post_filter, state->synth, Az_dec, T2, Vad);
+	post_filter(&state->post_filter_state, state->synth, Az_dec, T2, Vad);
 
 	post_process(&state->post_process, state->synth, L_FRAME);
 

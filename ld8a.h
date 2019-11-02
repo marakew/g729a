@@ -162,7 +162,7 @@ typedef struct lsp_enc
 } lsp_enc;
 
 
-typedef struct post_filter
+typedef struct post_filter_state
 {
         /* inverse filtered synthesis (with A(z/GAMMA2_PST))   */
   FLOAT res2_buf[PIT_MAX+L_SUBFR];
@@ -172,7 +172,7 @@ typedef struct post_filter
   FLOAT mem_syn_pst[M];
   FLOAT mem_pre;
   FLOAT past_gain;
-} post_filter;
+} post_filter_state;
 
 typedef struct dec_cng_state
 {
@@ -225,7 +225,7 @@ typedef struct decoder_state
   dec_cng_state cng_state;
   FLOAT past_qua_en[4];
   filter post_process;
-  post_filter post_filter;
+  post_filter_state post_filter_state;
   FLOAT  synth_buf[L_FRAME+M];     /* Synthesis                  */
   FLOAT  *synth;
 } decoder_state;
@@ -553,9 +553,10 @@ void  bits2prm_ld8k(unsigned char * bits, int prm[], int frame_size);
  * Prototypes for the post filtering                         *
  *-----------------------------------------------------------*/
 
-void init_post_filter(post_filter *f);
+void init_post_filter(post_filter_state *state);
 
-void post_filter(post_filter *f,
+void post_filter(
+  post_filter_state *state,
   FLOAT *syn,     /* in/out: synthesis speech (postfiltered is output)    */
   FLOAT *a_t,     /* input : interpolated LPC parameters in all subframes */
   int *T,          /* input : decoded pitch lags in all subframes          */
