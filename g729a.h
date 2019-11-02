@@ -13,7 +13,7 @@ void g729a_decoder_init(decoder_state *state);
 int g729a_decoder(decoder_state *state, unsigned char *bitstream, short *synth_short, int frame_size);
 
 #ifdef __cplusplus
-extern "C" {
+}
 #endif
 
 #endif
