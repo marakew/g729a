@@ -31,7 +31,7 @@ static void calc_pastfilt(enc_cng_state *state, FLOAT *Coeff);
 static void calc_RCoeff(FLOAT *Coeff, FLOAT *RCoeff);
 static int cmp_filt(FLOAT *RCoeff, FLOAT *acf, FLOAT alpha, FLOAT Thresh);
 static void calc_sum_acf(FLOAT *acf, FLOAT *sum, int nb);
-static void update_sumAcf(enc_cng_state *state,);
+static void update_sumAcf(enc_cng_state *state);
 
 /*-----------------------------------------------------------*
 * procedure init_Cod_cng:                                   *
@@ -142,7 +142,7 @@ void cod_cng(
         state->flag_chang = 0;
         
         /* Compute past average filter */
-        calc_pastfilt(state->pastCoeff, old_A, old_rc);
+        calc_pastfilt(state, state->pastCoeff);
         calc_RCoeff(state->pastCoeff, state->RCoeff);
         
         /* Compute stationarity of current filter   */
