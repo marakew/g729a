@@ -141,28 +141,28 @@
 /*-------------------------------*
  * context                       *
  *-------------------------------*/
-struct filter
+typedef struct filter
 {
   FLOAT x0, x1;		/* high-pass fir memory          */
   FLOAT y1, y2;		/* high-pass fir memory          */
-};
+} filter;
 
 
-struct lsp_dec
+typedef struct lsp_dec
 {
   FLOAT freq_prev[MA_NP][M];    /* previous LSP vector       */
 /* memory for frame erase operation */
   int prev_ma;                  /* previous MA prediction coef.*/
   FLOAT prev_lsp[M];            /* previous LSP vector         */
-};
+} lsp_dec;
 
-struct lsp_enc
+typedef struct lsp_enc
 {
   FLOAT freq_prev[MA_NP][M];    /* previous LSP vector       */
-};
+} lsp_enc;
 
 
-struct post_filter
+typedef struct post_filter
 {
         /* inverse filtered synthesis (with A(z/GAMMA2_PST))   */
   FLOAT res2_buf[PIT_MAX+L_SUBFR];
@@ -172,9 +172,9 @@ struct post_filter
   FLOAT mem_syn_pst[M];
   FLOAT mem_pre;
   FLOAT past_gain;
-};
+} post_filter;
 
-struct dec_cng_state
+typedef struct dec_cng_state
 {
   /* dec_sid.c */
   FLOAT cur_gain;
@@ -186,9 +186,9 @@ struct dec_cng_state
 
   /* tab_dtx.c */
   FLOAT noise_fg[MODE][MA_NP][M];
-};
+} dec_cng_state;
 
-struct decoder_state
+typedef struct decoder_state
 {
         /* Excitation vector */
   FLOAT old_exc[L_FRAME+PIT_MAX+L_INTERPOL];
@@ -228,9 +228,9 @@ struct decoder_state
   post_filter post_filter;
   FLOAT  synth_buf[L_FRAME+M];     /* Synthesis                  */
   FLOAT  *synth;
-};
+} decoder_state;
 
-struct enc_cng_state
+typedef struct enc_cng_state
 {
   FLOAT lspSid_q[M] ;
   FLOAT pastCoeff[MP1];
@@ -251,9 +251,9 @@ struct enc_cng_state
 
   /* tab_dtx.c */
   FLOAT noise_fg[MODE][MA_NP][M];
-};
+} enc_cng_state;
 
-struct vad_state
+typedef struct vad_state
 {
   FLOAT MeanLSF[M];
   FLOAT Min_buffer[16];
@@ -262,9 +262,9 @@ struct vad_state
   FLOAT prev_energy;
   int count_sil, count_update, count_ext;
   int flag, v_flag, count_inert, less_count;
-};
+} vad_state;
 
-struct encoder_state
+typedef struct encoder_state
 {
         /* Speech vector */
   FLOAT old_speech[L_TOTAL];
@@ -304,7 +304,7 @@ struct encoder_state
 
   int frame;
   int dtx_enable;
-};
+} encoder_state;
 
 /*-------------------------------*
  * Pre and post-process functions*
@@ -469,7 +469,7 @@ void  decod_ACELP(int signs, int positions, FLOAT cod[]);
  * Prototypes of LSP VQ functions                            *
  *-----------------------------------------------------------*/
 void qua_lsp(
-  lsp_enc *state
+  lsp_enc *state,
   FLOAT lsp[],       /* (i) : Unquantized LSP            */
   FLOAT lsp_q[],     /* (o) : Quantized LSP              */
   int ana[]          /* (o) : indexes                    */
