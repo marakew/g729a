@@ -73,32 +73,3 @@ void dec_cng(
   FLOAT freq_prev[MA_NP][M]
                         /* (i/o) : previous LPS for quantization        */
 );
-
-/*--------------------------------------------------------------------------*
- * Constants for DTX/CNG                                                    *
- *--------------------------------------------------------------------------*/
-
-/* DTX constants */
-#define FLAG_COD        1
-#define FLAG_DEC        0
-#define INIT_SEED       (INT16)11111
-#define FR_SID_MIN      3
-#define NB_SUMACF       3
-#define NB_CURACF       2
-#define NB_GAIN         2
-#define THRESH1         (FLOAT)1.1481628
-#define THRESH2         (FLOAT)1.0966466
-#define A_GAIN0         (FLOAT)0.875
-
-#define SIZ_SUMACF      (NB_SUMACF * MP1)
-#define SIZ_ACF         (NB_CURACF * MP1)
-#define A_GAIN1         ((FLOAT)1. - A_GAIN0)
-
-#define MIN_ENER        (FLOAT)0.1588489319   /* <=> - 8 dB      */
-
-/* CNG excitation generation constant */
-                                           /* alpha = 0.5 */
-#define NORM_GAUSS      (FLOAT)3.16227766  /* sqrt(40)xalpha */
-#define K0              (FLOAT)3.          /* 4 x (1 - alpha ** 2) */
-#define G_MAX           (FLOAT)5000.
-
