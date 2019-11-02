@@ -95,7 +95,7 @@ void prm2bits_ld8k(
    if (ftyp == 1) //voice frame
    {
      *frame_size = 10;
-
+#if 1
      unsigned int d0 = (prm[1]<<24) | //8
                       ((prm[2]&0x3ff)<<14) | //10
                       ((prm[3]&0xff)<<6) | //8
@@ -124,43 +124,43 @@ void prm2bits_ld8k(
 
      bits[8] = (d2>>8)&0xff;
      bits[9] = (d2>>0)&0xff;
-
+#else
      /* MA + 1st stage */
      //7+1
-     //bits[0] = (unsigned char)(prm[1] & 0xff);
+     bits[0] = (unsigned char)(prm[1] & 0xff);
 
      /* 2nd stage */
      //5*2
-     //bits[1] = (unsigned char)((prm[2] & 0x03fc) >> 2);
-     //bits[2] = (unsigned char)((prm[2] & 0x0003) << 6);
+     bits[1] = (unsigned char)((prm[2] & 0x03fc) >> 2);
+     bits[2] = (unsigned char)((prm[2] & 0x0003) << 6);
 
      /* first subframe  */
      //8
-     //bits[2] |= (unsigned char)((prm[3] & 0x00fc) >> 2);
-     //bits[3] = (unsigned char)((prm[3] & 0x0003) << 6);
+     bits[2] |= (unsigned char)((prm[3] & 0x00fc) >> 2);
+     bits[3] = (unsigned char)((prm[3] & 0x0003) << 6);
      //1
-     //bits[3] |= (unsigned char)((prm[4] & 0x0001) << 5);
+     bits[3] |= (unsigned char)((prm[4] & 0x0001) << 5);
      //13
-     //bits[3] |= (unsigned char)((prm[5] & 0x1f00) >> 8);
-     //bits[4] = (unsigned char)(prm[5] & 0x00ff);
+     bits[3] |= (unsigned char)((prm[5] & 0x1f00) >> 8);
+     bits[4] = (unsigned char)(prm[5] & 0x00ff);
      //4
-     //bits[5] = (unsigned char)((prm[6] & 0x000f) << 4);
+     bits[5] = (unsigned char)((prm[6] & 0x000f) << 4);
      //4+3
-     //bits[5] |= (unsigned char)((prm[7] & 0x0078) >> 3);
-     //bits[6] = (unsigned char)((prm[7] & 0x0007) << 5);
+     bits[5] |= (unsigned char)((prm[7] & 0x0078) >> 3);
+     bits[6] = (unsigned char)((prm[7] & 0x0007) << 5);
 
      /* second subframe */
      //5
-     //bits[6] |= (unsigned char)(prm[8] & 0x001f);
+     bits[6] |= (unsigned char)(prm[8] & 0x001f);
      //13
-     //bits[7] = (unsigned char)((prm[9] & 0x1fe0) >> 5);
-     //bits[8] = (unsigned char)((prm[9] & 0x001f) << 3);
+     bits[7] = (unsigned char)((prm[9] & 0x1fe0) >> 5);
+     bits[8] = (unsigned char)((prm[9] & 0x001f) << 3);
      //4
-     //bits[8] |= (unsigned char)((prm[10] & 0x000e) >> 1);
-     //bits[9] = (unsigned char)((prm[10] & 0x0001) << 7);
+     bits[8] |= (unsigned char)((prm[10] & 0x000e) >> 1);
+     bits[9] = (unsigned char)((prm[10] & 0x0001) << 7);
      //4+3
-     //bits[9] |= (unsigned char)(prm[11] & 0x007f);
-
+     bits[9] |= (unsigned char)(prm[11] & 0x007f);
+#endif
    } else
    if (ftyp == 2) //noise frame
    {
@@ -201,7 +201,7 @@ void bits2prm_ld8k(
    if (frame_size == 10)
    {
      prm[1] = 1; //voice frame
-
+#if 1
      unsigned int d0 = (bits[0] << 24) | (bits[1] << 16) | (bits[2] << 8) | (bits[3] << 0);
      unsigned int d1 = (bits[4] << 24) | (bits[5] << 16) | (bits[6] << 8) | (bits[7] << 0);
      unsigned int d2 = (bits[8] <<  8) | (bits[9] <<  0);
@@ -223,29 +223,28 @@ void bits2prm_ld8k(
      prm[10] = (d2 >> 11) | ((d1 & 0xff) << 5); //13
      prm[11] = (d2 >>  7) & 0xf; //4
      prm[12] = (d2 >>  0) & 0x7f; //4+3
+#else
+     prm[2] = (int)(bits[0]);
+     prm[3] = ((int)bits[1]) << 2;
+     prm[3] |= (int)(bits[2] >> 6);
 
+     prm[4] = ((int)(bits[2] & 0x3f)) << 2;
+     prm[4] |= (int)(bits[3] >> 6);
+     prm[5] = (int)((bits[3] & 0x20) >> 5);
+     prm[6] = (int)(bits[3] & 0x1f) << 8;
+     prm[6] |= (int)bits[4];
+     prm[7] = (int)(bits[5] >> 4);
+     prm[8] = (int)(bits[5] & 0x0f) << 3;
+     prm[8] |= (int)(bits[6] >> 5);
+
+     prm[9] = (int)(bits[6] & 0x1f);
+     prm[10] = (int)bits[7] << 5;
+     prm[10] |= (int)(bits[8] >> 3);
+     prm[11] = ((int)bits[8] & 0x07) << 1;
+     prm[11] |= (int)(bits[9] >> 7);
+     prm[12] = (int)bits[9] & 0x7f;
+#endif
      prm[5]  = check_parity_pitch(prm[4], prm[5]);
-
-     //prm[2] = (int)(bits[0]);
-     //prm[3] = ((int)bits[1]) << 2;
-     //prm[3] |= (int)(bits[2] >> 6);
-
-     //prm[4] = ((int)(bits[2] & 0x3f)) << 2;
-     //prm[4] |= (int)(bits[3] >> 6);
-     //prm[5] = (int)((bits[3] & 0x20) >> 5);
-     //prm[6] = (int)(bits[3] & 0x1f) << 8;
-     //prm[6] |= (int)bits[4];
-     //prm[7] = (int)(bits[5] >> 4);
-     //prm[8] = (int)(bits[5] & 0x0f) << 3;
-     //prm[8] |= (int)(bits[6] >> 5);
-
-     //prm[9] = (int)(bits[6] & 0x1f);
-     //prm[10] = (int)bits[7] << 5;
-     //prm[10] |= (int)(bits[8] >> 3);
-     //prm[11] = ((int)bits[8] & 0x07) << 1;
-     //prm[11] |= (int)(bits[9] >> 7);
-     //prm[12] = (int)bits[9] & 0x7f;
-
    }
    return;
 }
