@@ -30,7 +30,7 @@ int g729a_decoder(decoder_state *state, unsigned char * bitstream, short *synth_
 	if (frame_size != 2 && frame_size != 10)
 		return -1;
 
-	bits2prm_ld8k(bitstream, &parm[0], frame_size);	
+	bits2prm_ld8k_frame(bitstream, &parm[0], frame_size);	
 
 	decod_ld8a(state, parm, state->synth, Az_dec, T2, &Vad);
 
@@ -69,7 +69,9 @@ int main(int argc, char *argv[])
 	static INT16 synth[L_FRAME];
 
 	INT32   frame;
+#ifndef TEST_CONTROL
 	INT32	frame_size;
+#endif
 
 	if (argc != 3)
 	{
@@ -113,10 +115,47 @@ int main(int argc, char *argv[])
 #endif
 	{
 		printf("Frame: %d\r", frame++);
+#ifdef TEST_CONTROL
+	     {
+		int  i; 
+		FLOAT temp;
+		FLOAT  Az_dec[MP1*2];
+		int T2[2];
+		int parm[PRM_SIZE+2];
+	        int Vad;
 
+		bits2prm_ld8k(&serial[2], &parm[1]);
+
+		if (serial[0] == SYNC_WORD) {
+			parm[0] = 0;           /* No frame erasure */
+		} else {
+			parm[0] = 1;           /* frame erased     */
+		}
+
+		parm[4] = check_parity_pitch(parm[3], parm[4]);
+
+		decod_ld8a(&state, parm, state.synth, Az_dec, T2, &Vad);
+
+		post_filter(&state.post_filter_state, state.synth, Az_dec, T2, Vad);
+
+		post_process(&state.post_process, state.synth, L_FRAME);
+
+		for(i=0; i < L_FRAME; i++)
+		{
+		        temp = state.synth[i];
+		        if (temp >= (F)0.0)
+	                     temp += (F)0.5;
+		        else temp -= (F)0.5;
+	
+		        if (temp >  (F)32767.0 ) temp =  (F)32767.0;
+		        if (temp < (F)-32768.0 ) temp = (F)-32768.0;
+		        synth[i] = (INT16) temp;
+		}
+	      }
+#else
 		frame_size = 10;
 		g729a_decoder(&state, serial, synth, frame_size);
-
+#endif
 		fwrite((void *)synth, sizeof(INT16), L_FRAME, f_syn);
 	}
 

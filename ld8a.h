@@ -585,9 +585,19 @@ void  corr_xy2(FLOAT xn[], FLOAT y1[], FLOAT y2[], FLOAT g_coeff[]);
 /*-----------------------*
  * Bitstream function    *
  *-----------------------*/
-void  prm2bits_ld8k(int prm[], unsigned char * bits, int *frame_size);
+#ifdef TEST_CONTROL
+void prm2bits_ld8k(
+ int  prm[],            /* input : encoded parameters  */
+ INT16 bits[]           /* output: serial bits         */
+);
+void bits2prm_ld8k(
+ INT16 bits[],          /* input : serial bits        */
+ int  prm[]             /* output: decoded parameters */
+);
+#endif
+void  prm2bits_ld8k_frame(int prm[], unsigned char * bits, int *frame_size);
 
-void  bits2prm_ld8k(unsigned char * bits, int prm[], int frame_size);
+void  bits2prm_ld8k_frame(unsigned char * bits, int prm[], int frame_size);
 
 /*-----------------------------------------------------------*
  * Prototypes for the post filtering                         *

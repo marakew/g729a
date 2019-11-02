@@ -29,7 +29,7 @@ int g729a_encoder(encoder_state *state, short *speech, unsigned char *bitstream,
     coder_ld8a(state, prm, state->frame, state->dtx_enable);
 
     if (prm[0])
-       prm2bits_ld8k(prm, bitstream, frame_size);
+       prm2bits_ld8k_frame(prm, bitstream, frame_size);
     else
       *frame_size = 0;
     return 0;
@@ -104,11 +104,23 @@ int main(int argc, char *argv[])
 	while(fread((void *)sp16, sizeof(INT16), L_FRAME, f_speech) == L_FRAME){
 		frame++;
 		printf("Frame: %l\r", frame);
-
-		g729a_encoder(&state, sp16, serial, &frame_size);
 #ifdef TEST_CONTROL
+		INT16  i;
+		int prm[PRM_SIZE];
+
+		for (i = 0; i < L_FRAME; i++) state.new_speech[i] = (FLOAT) sp16[i];
+
+		pre_process(&state.pre_process, state.new_speech, L_FRAME);
+
+		if (state.frame == 32767) state.frame = 256;
+		else state.frame++;
+
+		coder_ld8a(state, prm, state.frame, state.dtx_enable);
+
+		prm2bits_ld8k(prm, serial);
 		fwrite((void *)serial, sizeof(INT16), SERIAL_SIZE, f_serial);
 #else
+		g729a_encoder(&state, sp16, serial, &frame_size);
 		fwrite((void *)serial, sizeof(unsigned char), M, f_serial);
 #endif
 	}
