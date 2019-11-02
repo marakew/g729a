@@ -152,7 +152,7 @@ void decod_ld8a(decoder_state *state,
    else {
 
     state->seed = INIT_SEED;
-    parm++;
+
    /* Decode the LSPs */
 
    d_lsp(&state->lsp_state, parm, lsp_new, bfi+state->bad_lsf );

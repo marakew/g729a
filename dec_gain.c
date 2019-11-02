@@ -21,7 +21,8 @@
  * dec_gain - decode the adaptive and fixed codebook gains
  *----------------------------------------------------------------------------
  */
-void dec_gain(FLOAT past_qua_en[],
+void dec_gain(
+ FLOAT past_qua_en[],
  int index,             /* input : quantizer index              */
  FLOAT code[],          /* input : fixed code book vector       */
  int l_subfr,           /* input : subframe size                */

@@ -2,8 +2,8 @@ EXE = G729a
 CC = gcc
 CXX = g++
 
-CFLAG = -O2
-CFLAGCXX = -O2
+CFLAG = -O2 -g
+CFLAGCXX = -O2 -g
 
 OBJS=$(patsubst %.c,%.o,$(wildcard *.c))
 OBJS+=$(patsubst %.cpp,%.o,$(wildcard *.cpp))
