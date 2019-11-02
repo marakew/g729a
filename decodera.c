@@ -53,7 +53,7 @@ int g729a_decoder(decoder_state *state, unsigned char * bitstream, short *synth_
 	return 0;
 }
 
-#ifdef TEST
+#ifdef TEST_DECODER
 int main(int argc, char *argv[])
 {
 	decoder_state state;
@@ -124,7 +124,9 @@ int main(int argc, char *argv[])
 		int parm[PRM_SIZE+2];
 	        int Vad;
 
-		bits2prm_ld8k(&serial[2], &parm[1]);
+		param[1] = 1; //voice frame
+
+		bits2prm_ld8k(&serial[2], &parm[2]);
 
 		if (serial[0] == SYNC_WORD) {
 			parm[0] = 0;           /* No frame erasure */
@@ -132,7 +134,7 @@ int main(int argc, char *argv[])
 			parm[0] = 1;           /* frame erased     */
 		}
 
-		parm[4] = check_parity_pitch(parm[3], parm[4]);
+		parm[5] = check_parity_pitch(parm[4], parm[5]);
 
 		decod_ld8a(&state, parm, state.synth, Az_dec, T2, &Vad);
 

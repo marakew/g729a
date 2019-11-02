@@ -128,6 +128,7 @@ void decod_ld8a(decoder_state *state,
      //if(ftyp == 1) ftyp = 0;
      parm[-1] = ftyp;
    }
+
    *Vad = ftyp;
 
     /* for G.729B */

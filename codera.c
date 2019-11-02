@@ -35,7 +35,7 @@ int g729a_encoder(encoder_state *state, short *speech, unsigned char *bitstream,
     return 0;
 }
 
-#ifdef TEST
+#ifdef TEST_ENCODER
 int main(int argc, char *argv[])
 {
 	encoder_state state;
@@ -103,10 +103,10 @@ int main(int argc, char *argv[])
 	frame = 0;
 	while(fread((void *)sp16, sizeof(INT16), L_FRAME, f_speech) == L_FRAME){
 		frame++;
-		printf("Frame: %l\r", frame);
+		printf("Frame: %d\r", frame);
 #ifdef TEST_CONTROL
 		INT16  i;
-		int prm[PRM_SIZE];
+		int prm[PRM_SIZE+1];
 
 		for (i = 0; i < L_FRAME; i++) state.new_speech[i] = (FLOAT) sp16[i];
 
@@ -115,9 +115,9 @@ int main(int argc, char *argv[])
 		if (state.frame == 32767) state.frame = 256;
 		else state.frame++;
 
-		coder_ld8a(state, prm, state.frame, state.dtx_enable);
+		coder_ld8a(&state, prm, state.frame, state.dtx_enable);
 
-		prm2bits_ld8k(prm, serial);
+		prm2bits_ld8k(&prm[1], serial);
 		fwrite((void *)serial, sizeof(INT16), SERIAL_SIZE, f_serial);
 #else
 		g729a_encoder(&state, sp16, serial, &frame_size);
