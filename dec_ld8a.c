@@ -71,14 +71,14 @@ void init_decod_ld8a(decoder_state *state)
   state->gain_pitch = (F)0.0;
 
   lsp_decw_reset(&state->lsp_state);
-  init_exc_err(state->dec_cng.exc_err);
+  init_exc_err(state->cng_state.exc_err);
   copy(lsp_old, state->lsp_old, M);
 
   state->seed_fer = 21845;
   state->seed = INIT_SEED;
   state->past_ftyp = 1;
-  state->sid_save = (F)0.0;
-  init_lsfq_noise(state->dec_cng.noise_fg);
+  state->sid_sav = (F)0.0;
+  init_lsfq_noise(state->cng_state.noise_fg);
 
   copy(past_qua_en, state->past_qua_en, M);
 
@@ -135,7 +135,7 @@ void decod_ld8a(decoder_state *state,
    if(ftyp != 1) {
      //get_decfreq_prev(&state->lsp_state, &lsfq_mem[i][0], MA_NP);
      for (i=0; i<MA_NP; i++) copy(&state->lsp_state.freq_prev[i][0], &lsfq_mem[i][0], M);
-     dec_cng(&state->dec_cng, state->past_ftyp, state->sid_sav, &parm[-1], state->exc, state->lsp_old,
+     dec_cng(&state->cng_state, state->past_ftyp, state->sid_sav, &parm[-1], state->exc, state->lsp_old,
                 A_t, &state->seed, lsfq_mem);
      //update_decfreq_prev(&state->lsp_state, &lsfq_mem[i][0], MA_NP);
      for (i=0; i<MA_NP; i++) copy(&lsfq_mem[i][0], &state->lsp_state.freq_prev[i][0], M);
@@ -146,12 +146,12 @@ void decod_ld8a(decoder_state *state,
           Az += MP1;
           *T2++ = state->old_T0;
      }
-     sharp = SHARPMIN;
+     state->sharp = SHARPMIN;
    }
    /* Processing active frame */
    else {
 
-    st->seed = INIT_SEED;
+    state->seed = INIT_SEED;
     parm++;
    /* Decode the LSPs */
 

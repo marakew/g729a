@@ -242,7 +242,7 @@ typedef struct decoder_state
   /* CNG variables */
   int past_ftyp;
   INT16 seed;
-  FLOAT sid_save;
+  FLOAT sid_sav;
 
   int bad_lsf;		/* bad LSF indicator   */
 /*
