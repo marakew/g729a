@@ -42,11 +42,7 @@
 */
 void init_dec_cng(dec_cng_state *state)
 {
-    int i;
-    
-    for (i=0; i<M; i++ )
-        state->lspSid[i] = (FLOAT)cos(freq_prev_reset[i]);
-    //lsp_lsf(freq_prev_reset, state->lspSid, M);
+    lsf_lsp(freq_prev_reset, state->lspSid, M);
     
     state->sid_gain = tab_Sidgain[0];
     
@@ -95,14 +91,14 @@ void dec_cng(
         
         /* Case of 1st SID frame erased : quantize-decode   */
         /* energy estimate stored in sid_gain         */
-        if(past_ftyp > 1) {
+        if(past_ftyp == 1) {
             qua_Sidgain(&sid_sav, 0, &temp, &ind);
             state->sid_gain = tab_Sidgain[ind];
         }
         
     }
     
-    if(past_ftyp > 1) {
+    if(past_ftyp == 1) {
         state->cur_gain = state->sid_gain;
     }
     else {

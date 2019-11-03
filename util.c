@@ -19,7 +19,7 @@
 
 #include "typedef.h"
 #include "ld8a.h"
-
+#if 0
 /*-------------------------------------------------------------------*
  * Function  set zero()                                              *
  *           ~~~~~~~~~~                                              *
@@ -58,7 +58,7 @@ void copy(
 
    return;
 }
-
+#endif
 /* Random generator  */
 
 INT16 random_g729(INT16 *seed)
@@ -72,12 +72,12 @@ INT16 random_g729(INT16 *seed)
 /*****************************************************************************/
 /* Functions used by VAD.C                                                   */
 /*****************************************************************************/
-void dvsub(FLOAT *in1, FLOAT *in2, FLOAT *out, INT16 npts)
+void dvsub(FLOAT *in1, FLOAT *in2, FLOAT *out, int npts)
 {
     while (npts--)  *(out++) = *(in1++) - *(in2++);
 }
 
-FLOAT dvdot(FLOAT *in1, FLOAT *in2, INT16 npts)
+FLOAT dvdot(FLOAT *in1, FLOAT *in2, int npts)
 {
     FLOAT accum;
     
@@ -87,12 +87,12 @@ FLOAT dvdot(FLOAT *in1, FLOAT *in2, INT16 npts)
 }
 
 void dvwadd(FLOAT *in1, FLOAT scalar1, FLOAT *in2, FLOAT scalar2,
-                        FLOAT *out, INT16 npts)
+                        FLOAT *out, int npts)
 {
     while (npts--)  *(out++) = *(in1++) * scalar1 + *(in2++) * scalar2;
 }
 
-void dvsmul(FLOAT *in, FLOAT scalar, FLOAT *out, INT16 npts)
+void dvsmul(FLOAT *in, FLOAT scalar, FLOAT *out, int npts)
 {
     while (npts--)  *(out++) = *(in++) * scalar;
 }

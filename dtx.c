@@ -40,13 +40,9 @@ static void update_sumAcf(enc_cng_state *state);
 *-----------------------------------------------------------*/
 void init_cod_cng(enc_cng_state *state)
 {
-    int i;
-    
-    for(i=0; i<SIZ_SUMACF; i++) state->sumAcf[i] = (F)0.;
-    
-    for(i=0; i<SIZ_ACF; i++) state->Acf[i] = (F)0.;
-    
-    for(i=0; i<NB_GAIN; i++) state->ener[i] = (F)0.;
+    set_zero(state->sumAcf, SIZ_SUMACF);
+    set_zero(state->Acf, SIZ_ACF);
+    set_zero(state->ener, NB_GAIN);
     
     state->cur_gain = 0;
     state->fr_cur = 0;
@@ -185,9 +181,7 @@ void cod_cng(
     calc_exc_rand(state->exc_err, state->cur_gain, exc, seed, FLAG_COD);
     
     int_qlpc(lsp_old_q, state->lspSid_q, Aq);
-    for(i=0; i<M; i++) {
-        lsp_old_q[i]  = state->lspSid_q[i];
-    }
+    copy(state->lspSid_q, lsp_old_q, M);
     
     /* Update sumAcf if fr_cur = 0 */
     if(state->fr_cur == 0) {
@@ -221,9 +215,7 @@ void update_cng(
     }
     
     /* Save current Acf */
-    for(i=0; i<MP1; i++) {
-        state->Acf[i] = r[i];
-    }
+    copy(r, state->Acf, MP1);
     
     state->fr_cur++;
     if(state->fr_cur == NB_CURACF) {
@@ -289,7 +281,6 @@ static int cmp_filt(FLOAT *RCoeff, FLOAT *acf, FLOAT alpha, FLOAT Thresh)
 /*******************************/
 static void calc_pastfilt(enc_cng_state *state, FLOAT *Coeff)
 {
-    int i;
     FLOAT s_sumAcf[MP1];
     FLOAT bid[M];
 
@@ -297,7 +288,7 @@ static void calc_pastfilt(enc_cng_state *state, FLOAT *Coeff)
     
     if(s_sumAcf[0] == (F)0.) {
         Coeff[0] = (F)1.;
-        for(i=1; i<=M; i++) Coeff[i] = (F)0.;
+        set_zero(Coeff + 1, M);
         return;
     }
 
@@ -332,9 +323,8 @@ static void calc_sum_acf(FLOAT *acf, FLOAT *sum, int nb)
     FLOAT *ptr1;
     int i, j;
     
-    for(j=0; j<MP1; j++) {
-        sum[j] = (F)0.;
-    }
+    set_zero(sum, MP1);
+
     ptr1 = acf;
     for(i=0; i<nb; i++) {
         for(j=0; j<MP1; j++) {

@@ -25,8 +25,6 @@
 #include "dtx.h"
 #include "tab_dtx.h"
 
-#define VAD_APPENDIX_II
-
 /* Local functions */
 static int MakeDec(
     FLOAT dSLE,    /* (i)  : differential low band energy */
@@ -53,9 +51,6 @@ void vad_init(vad_state *state)
     state->MeanE = (F)0.0;
     state->MeanSZC = (F)0.0;
     state->count_sil = 0;
-#ifdef VAD_APPENDIX_II
-    state->count_inert = 0;
-#endif
     state->count_update = 0;
     state->count_ext = 0;
     state->less_count = 0;
@@ -197,12 +192,6 @@ void vad(
 
     if (frm_count >= INIT_FRAME ){
         if (frm_count == INIT_FRAME ){
-#ifdef VAD_APPENDIX_II
-          if (frm_count == INIT_FRAME && state->less_count >= INIT_FRAME){
-            frm_count = 0;
-            state->less_count = 0;
-          }
-#endif
             state->MeanSE = state->MeanE -(F)10.0;
             state->MeanSLE = state->MeanE -(F)12.0;
         }
@@ -218,23 +207,12 @@ void vad(
             *marker =MakeDec(dSLE, dSE, SD, dSZC );
         }
         
-#ifdef VAD_APPENDIX_II
-        if(*marker == VOICE)
-           state->count_inert=0;
-
-        if(*marker == NOISE&&state->count_inert-6<0){
-            state->count_inert++;
-            *marker=VOICE;
-        }
-#else
         state->v_flag =0;
-#endif
+
         if( (prev_marker == VOICE) && (*marker == NOISE) &&
             (norm_energy > state->MeanSE + (F)2.0) && ( norm_energy>(F)21.0)){
             *marker = VOICE;
-#ifndef VAD_APPENDIX_II
             state->v_flag=1;
-#endif
         }
         
         if((state->flag == 1) ){
@@ -242,9 +220,8 @@ void vad(
                 (*marker == NOISE) && (fabs(state->prev_energy - norm_energy)<= (F)3.0)){
                 state->count_ext++;
                 *marker = VOICE;
-#ifndef VAD_APPENDIX_II
                 state->v_flag=1;
-#endif
+
                 if(state->count_ext <=4)
                     state->flag =1;
                 else{
@@ -263,24 +240,15 @@ void vad(
             ((norm_energy - state->prev_energy) <= (F)3.0)){
             *marker = NOISE;
             state->count_sil=0;
-#ifdef VAD_APPENDIX_II
-            state->count_inert=6;
-#endif
         }
         
         
         if(*marker == VOICE)
             state->count_sil=0;
  
-#ifndef VAD_APPENDIX_II
         if ((norm_energy < state->MeanSE+ (F)3.0) && ( frm_count >128) &&( !state->v_flag) && (rc <(F)0.6) ) *marker = NOISE;
-#endif
 
-        if ((norm_energy < state->MeanSE+ (F)3.0) && (rc <(F)0.75)
-#ifdef VAD_APPENDIX_II
-		&& ( SD<(F)0.002532959)
-#endif
-        ){
+        if ((norm_energy < state->MeanSE+ (F)3.0) && (rc <(F)0.75) && ( SD<(F)0.002532959)){
             state->count_update++;
             if (state->count_update < INIT_COUNT){
                 COEF = (F)0.75;
@@ -322,7 +290,7 @@ void vad(
             state->MeanSZC = COEFZC*state->MeanSZC+((F)1.0- COEFZC)*ZC;
         }
         
-        if((frm_count >128) && ( (  state->MeanSE < state->Min ) && ( SD<(F)0.002532959)) || ( state->MeanSE > state->Min +(F)10.0 )){
+        if(((frm_count > 128) && (state->MeanSE < state->Min) && (SD<(F)0.002532959)) || (state->MeanSE > state->Min +(F)10.0)){
             state->MeanSE = state->Min;
             state->count_update = 0;
         }

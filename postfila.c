@@ -148,7 +148,7 @@ void post_filter(
     /* impulse response of A(z/GAMMA2_PST)/A(z/GAMMA1_PST) */
 
     copy(ap3, h, MP1);
-    set_zero(&h[MP1],L_H-MP1);
+    set_zero(&h[MP1],L_H-MP1); //warn
     syn_filt(ap4, h, h, L_H, &h[M+1], 0);
 
     /* 1st correlation of h[] */
@@ -209,7 +209,7 @@ static void pit_pst_filt(
 )
 {
   int    i, j;
-  int    t0;
+  int    t0=0;
   FLOAT  cor_max;
   FLOAT  temp, g0, gain;
   FLOAT  ener, corr, ener0;

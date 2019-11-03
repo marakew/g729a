@@ -57,8 +57,8 @@ int ACELP_code_A(       /* (o) :index of pulses positions    */
 )
 {
   int i, index;
-  FLOAT Dn[L_SUBFR]; /* "static" to avoid stack overflow on PC */
-  FLOAT rr[DIM_RR];  /* "static" to avoid stack overflow on PC */
+  FLOAT Dn[L_SUBFR];
+  FLOAT rr[DIM_RR];
 
  /*-----------------------------------------------------------------*
   * Include fixed-gain pitch contribution into impulse resp. h[]    *
@@ -403,12 +403,10 @@ static int d4i40_17_fast(/*(o) : Index of pulses positions.               */
   int *sign             /* (o) : Signs of 4 pulses.                       */
 )
 {
-
-
-  int i0, i1, i2, i3, ip0, ip1, ip2, ip3;
-  int i, j, ix, iy, track, trk;
+  int i0, i1, i2, i3, ip0=0, ip1=0, ip2=0, ip3=0;
+  int i, j, ix=0, iy=0, track, trk;
   int prev_i0, i1_offset;
-  FLOAT psk, ps, ps0, ps1, ps2, sq, sq2;
+  FLOAT psk, ps=0, ps0, ps1, ps2, sq, sq2;
   FLOAT alpk, alp, max;
   FLOAT s, alp0, alp1, alp2;
   FLOAT *p0, *p1, *p2, *p3, *p4;
@@ -563,7 +561,7 @@ static int d4i40_17_fast(/*(o) : Index of pulses positions.               */
       p0 = rri2i2 + j;
 
       ps1 = dn[i0];
-      alp1 = 0.5 * *p0;
+      alp1 = (F)0.5 * *p0;
 
       /* i1 loop: 8 positions in track 2 */
 
@@ -694,7 +692,7 @@ static int d4i40_17_fast(/*(o) : Index of pulses positions.               */
       p0 = ptr_rri3i3_i4 + j;
 
       ps1 = dn[i0];
-      alp1 = 0.5 * *p0;
+      alp1 = (F)0.5 * *p0;
 
       /* i1 loop: 8 positions in track 0 */
 

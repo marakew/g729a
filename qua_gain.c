@@ -54,7 +54,7 @@ int qua_gain(           /* output: quantizer index                   */
  * mean-squared weighted error criterion is used in the quantizer search.    *
  *   CS Codebook , fast pre-selection version                                *
  */
-   int    i,j, index1, index2;
+   int    i,j, index1=0, index2=0;
    int    cand1,cand2 ;
    FLOAT  gcode0 ;
    FLOAT  dist, dist_min, g_pitch, g_code;

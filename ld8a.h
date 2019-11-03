@@ -295,7 +295,7 @@ typedef struct vad_state
   FLOAT MeanE, MeanSE, MeanSLE, MeanSZC;
   FLOAT prev_energy;
   int count_sil, count_update, count_ext;
-  int flag, v_flag, count_inert, less_count;
+  int flag, v_flag, less_count;
 } vad_state;
 
 typedef struct encoder_state
@@ -392,13 +392,13 @@ FLOAT levinson(FLOAT *a, FLOAT *r, FLOAT *r_c);
 
 void  az_lsp(FLOAT *a, FLOAT *lsp, FLOAT *old_lsp);
 
-void lsf_lsp(FLOAT *lsf, FLOAT *lsp, int m);
-
-void lsp_lsf(FLOAT *lsp, FLOAT *lsf, int m);
-
 void  int_qlpc(FLOAT lsp_new[], FLOAT lsp_old[], FLOAT a[]);
 
 void  weight_az(FLOAT *a,  FLOAT gamma, int m,  FLOAT *ap);
+
+void lsf_lsp(FLOAT *lsf, FLOAT *lsp, int m);
+
+void lsp_lsf(FLOAT *lsp, FLOAT *lsf, int m);
 
 void residu(    /* filter A(z)                                       */
  FLOAT *a,      /* input : prediction coefficients a[0:m+1], a[0]=1. */
@@ -626,7 +626,7 @@ int test_err(FLOAT exc_err[4], int t0, int t0_frac);
 /*-----------------------------------------------------------*
  * Prototypes for auxiliary functions                        *
  *-----------------------------------------------------------*/
-
+#if 0
 void set_zero(
   FLOAT  x[],           /* (o)  : vector to clear  */
   int L                 /* (i)  : length of vector */
@@ -637,11 +637,17 @@ void copy(
   FLOAT  y[],           /* (o)  : output vector  */
   int L                 /* (i)  : vector length  */
 );
+#else
+#include <string.h>
+#include <memory.h>
+#define set_zero(dst,L) memset((dst),0, sizeof(FLOAT)*(L));
+#define copy(src,dst,L) memcpy((dst),(src),sizeof(FLOAT)*(L));
+#endif
 
 INT16 random_g729(INT16 *seed);
 
-void dvsub(FLOAT *in1, FLOAT *in2, FLOAT *out, INT16 npts);
-FLOAT dvdot(FLOAT *in1, FLOAT *in2, INT16 npts);
+void dvsub(FLOAT *in1, FLOAT *in2, FLOAT *out, int npts);
+FLOAT dvdot(FLOAT *in1, FLOAT *in2, int npts);
 void dvwadd(FLOAT *in1, FLOAT scalar1, FLOAT *in2, FLOAT scalar2,
-             FLOAT *out, INT16 npts);
-void dvsmul(FLOAT *in, FLOAT scalar, FLOAT *out, INT16 npts);
+             FLOAT *out, int npts);
+void dvsmul(FLOAT *in, FLOAT scalar, FLOAT *out, int npts);

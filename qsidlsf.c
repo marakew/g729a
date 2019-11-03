@@ -263,6 +263,8 @@ static void New_ML_search_2(
     
     /* select the candidates */
     for (q=0 ; q < K ; q++) {
+	min_indx_p[q] = 0;
+	min_indx_m[q] = 0;
         for (p=0 ; p < J ; p++) {
             for (m=0 ; m < MQ ; m++) {
                 if (sum[p*MQ+m] < min[q]) {

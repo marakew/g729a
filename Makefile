@@ -1,21 +1,20 @@
-EXE = G729a
+LIB = libg729ab.a
 CC = gcc
-CXX = g++
 
-CFLAG = -O0 -g
-CFLAGCXX = -O0 -g
+CFLAGS+=-Wall -O3 -Dsingle -march=$(ARCH) -ffast-math -funroll-loops -fomit-frame-pointer -Werror
 
 OBJS=$(patsubst %.c,%.o,$(wildcard *.c))
-OBJS+=$(patsubst %.cpp,%.o,$(wildcard *.cpp))
+
+all: $(LIB)
+
 
 .c.o:
-	$(CC) $(CFLAG) -c $<
-.cpp.o:
-	$(CXX) $(CFLAGCXX) -c $<
+	$(CC) $(CFLAGS) -c $<
 
-$(EXE):$(OBJS)
-	ar -crv libg729a.a $(OBJS)
+$(LIB): $(OBJS)
+	ar -cr $(LIB) $(OBJS)
+	ranlib $(LIB)
 
 clean:
-	rm -rf *.o
-	rm -rf *.a
+	rm -rf $(LIB) $(OBJS)
+

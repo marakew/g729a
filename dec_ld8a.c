@@ -108,12 +108,11 @@ void decod_ld8a(decoder_state *state,
    bfi = *parm++;
 
    /* for G.729B */
-   ftyp = *parm++;
+   ftyp = *parm;
 
    if(bfi == 1) {
      ftyp = state->past_ftyp == 1;
-     //if(ftyp == 1) ftyp = 0;
-     parm[-1] = ftyp;
+     *parm = ftyp;
    }
 
    *Vad = ftyp;
@@ -123,13 +122,13 @@ void decod_ld8a(decoder_state *state,
    if(ftyp != 1) {
      //get_decfreq_prev(&state->lsp_state, &lsfq_mem[i][0], MA_NP);
      for (i=0; i<MA_NP; i++) copy(&state->lsp_state.freq_prev[i][0], &lsfq_mem[i][0], M);
-     dec_cng(&state->cng_state, state->past_ftyp, state->sid_sav, &parm[-1], state->exc, state->lsp_old,
+     dec_cng(&state->cng_state, state->past_ftyp, state->sid_sav, parm, state->exc, state->lsp_old,
                 A_t, &state->seed, lsfq_mem);
      //update_decfreq_prev(&state->lsp_state, &lsfq_mem[i][0], MA_NP);
      for (i=0; i<MA_NP; i++) copy(&lsfq_mem[i][0], &state->lsp_state.freq_prev[i][0], M);
      Az = A_t;
      for (i_subfr = 0; i_subfr < L_FRAME; i_subfr += L_SUBFR) {
-          syn_filt(Az, &state->exc[i_subfr], &synth[i_subfr], L_SUBFR, state->mem_syn, 0); //Overflow ???
+          syn_filt(Az, &state->exc[i_subfr], &synth[i_subfr], L_SUBFR, state->mem_syn, 0);
           copy(&synth[i_subfr+L_SUBFR-M], state->mem_syn, M);
           Az += MP1;
           *T2++ = state->old_T0;
@@ -140,6 +139,7 @@ void decod_ld8a(decoder_state *state,
    else {
 
     state->seed = INIT_SEED;
+    parm++;
 
    /* Decode the LSPs */
 

@@ -190,31 +190,30 @@ void coder_ld8a(encoder_state *state,
  *------------------------------------------------------------------------*/
    {
       /* Temporary vectors */
-     FLOAT r[MP1];                    /* Autocorrelations       */
+     FLOAT r[NP+1];                    /* Autocorrelations       */
      FLOAT rc[M];                     /* Reflexion coefficients */
      FLOAT lsp_new[M];                /* lsp coefficients       */
      FLOAT lsp_new_q[M];              /* Quantized lsp coeff.   */
-
+     FLOAT lsf_new[M];
 
      /* For G.729B */
      FLOAT r_nbe[MP1];
-     FLOAT lsf_new[M];
      FLOAT lsfq_mem[MA_NP][M];
      int Vad;
      FLOAT Energy_db;
 
      /* LP analysis */
-
-     autocorr(state->p_window, M, r);             /* Autocorrelations */
+     autocorr(state->p_window, NP, r);             /* Autocorrelations */
      copy(r, r_nbe, MP1);
-     lag_window(M, r);                     /* Lag windowing    */
+     lag_window(NP, r);                     /* Lag windowing    */
      levinson(r, Ap_t, rc);                /* Levinson Durbin  */
      az_lsp(Ap_t, lsp_new, state->lsp_old);       /* Convert A(z) to lsp */
 
      if (dtx_enable == 1)
      {
 	lsp_lsf(lsp_new, lsf_new, M);
-	vad(&state->vad_state, rc[1], lsf_new, r, state->p_window, frame, state->pastVad, state->ppastVad, &Vad, &Energy_db);
+	vad(&state->vad_state, rc[1], lsf_new, r, state->p_window, frame,
+		state->pastVad, state->ppastVad, &Vad, &Energy_db);
 	update_cng(&state->cng_state, r_nbe, Vad);
      } else Vad = 1;
 
@@ -241,9 +240,9 @@ void coder_ld8a(encoder_state *state,
 
           /* Compute wsp and mem_w */
           Ap = Ap_t + MP1;
-          Ap[0] = 4096;
+          Ap[0] = (F)0.125;
           for (i = 1; i <= M; i++)
-             Ap[i] = Ap_t[i] - (F)0.7 * Ap_t[i-1];
+             Ap[i] = (F)(Ap_t[i] - (F)0.7 * Ap_t[i-1]);
           syn_filt(Ap, xn, &state->wsp[i_subfr], L_SUBFR, state->mem_w, 1);
 
           /* Compute mem_w0 */
@@ -362,7 +361,7 @@ void coder_ld8a(encoder_state *state,
        *---------------------------------------------------------------*/
 
       h1[0] = (F)1.0;
-      set_zero(&h1[1], L_SUBFR-1);
+      set_zero(&h1[1], L_SUBFR-1); //warn
       syn_filt(Ap, h1, h1, L_SUBFR, &h1[1], 0);
 
       /*-----------------------------------------------*

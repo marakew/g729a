@@ -87,7 +87,7 @@ static void int2bin(
 
    for (i = 0; i < no_of_bits; i++)
    {
-     bit = value & 0x0001;      /* get lsb */
+     bit = value & (INT16)0x0001;      /* get lsb */
      if (bit == 0)
          *--pt_bitstream = BIT_0;
      else
@@ -127,7 +127,7 @@ static int  bin2int(            /* output: decimal value of bit pattern */
 )
 {
    int    value, i;
-   int  bit;
+   INT16  bit;
 
    value = 0;
    for (i = 0; i < no_of_bits; i++)
@@ -216,7 +216,7 @@ void prm2bits_ld8k_frame(
    {
      *frame_size = 10;
 #if 1
-     unsigned int d0 = (prm[1]<<24) | //8
+     unsigned int d0 = ((prm[1]&0xff)<<24) | //8
                       ((prm[2]&0x3ff)<<14) | //10
                       ((prm[3]&0xff)<<6) | //8
                       ((prm[4]&1)<<5) | //1
@@ -227,18 +227,18 @@ void prm2bits_ld8k_frame(
      bits[2] = (d0>>8)&0xff;
      bits[3] = (d0>>0)&0xff;
 
-     unsigned int d1 = (prm[5]<<24) | //8
+     unsigned int d1 = ((prm[5]&0xff)<<24) | //8
                       ((prm[6]&0xf)<<20) | //4
                       ((prm[7]&0x7f)<<13) | //7
                       ((prm[8]&0x1f)<<8) | //5
-                       (prm[9]>>5)&0xff; //8
+                       ((prm[9]>>5)&0xff); //8
 
      bits[4] = (d1>>24)&0xff;
      bits[5] = (d1>>16)&0xff;
      bits[6] = (d1>>8)&0xff;
      bits[7] = (d1>>0)&0xff;
 
-     unsigned int d2 = ((prm[9]&0x7ff)<<11) | //
+     unsigned int d2 = ((prm[9]&0x1f)<<11) | //
                       ((prm[10]&0xf)<<7) |
                        (prm[11]&0x7f);
 
@@ -285,8 +285,13 @@ void prm2bits_ld8k_frame(
    if (ftyp == 2) //noise frame
    {
      *frame_size = 2;
-     bits[0] = (prm[4]);
-     bits[1] = (prm[4] << 1) & 0x1f;
+     unsigned int d0 = ((prm[1]<<15)&1) | //
+                      ((prm[2]<<10)&0x1f) | //
+                      ((prm[3]<<6)&0xf) | //
+                      ((prm[4]<<1)&0x1f); //
+
+     bits[0] = (d0>>8)&0xff;
+     bits[1] = (d0>>0)&0xff;
    } else
      *frame_size = 0;
    return;
@@ -327,20 +332,20 @@ void bits2prm_ld8k_frame(
      unsigned int d2 = (bits[8] <<  8) | (bits[9] <<  0);
 
      /* MA + 1st stage */
-     prm[2] = (d0 >> 24); //7+1
+     prm[2] = (d0 >> 24) & 0xff; //7+1
      /* 2nd stage */
      prm[3] = (d0 >> 14) & 0x3ff; //5*2
 
      /* first subframe  */
      prm[4] = (d0 >>  6) & 0xff; //8 
      prm[5] = (d0 >>  5) & 1; //1
-     prm[6] = ((d0 & 0x1f) << 8) | (d1 >> 24); //13
+     prm[6] = ((d0 & 0x1f) << 8) | ((d1 >> 24) & 0xff); //13
      prm[7] = (d1 >> 20) & 0xf; //4
      prm[8] = (d1 >> 13) & 0x7f; //4+3
 
      /* second subframe */
      prm[9] = (d1 >>  8) & 0x1f; //5
-     prm[10] = (d2 >> 11) | ((d1 & 0xff) << 5); //13
+     prm[10] = ((d2 >> 11)&0x1f) | ((d1 & 0xff) << 5); //13
      prm[11] = (d2 >>  7) & 0xf; //4
      prm[12] = (d2 >>  0) & 0x7f; //4+3
 #else

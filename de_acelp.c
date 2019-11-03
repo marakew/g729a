@@ -52,7 +52,7 @@ void decod_ACELP(
 
    /* find the algebraic codeword */
 
-   for (i = 0; i < L_SUBFR; i++) cod[i] = 0;
+   set_zero(cod, L_SUBFR);
 
    /* decode the signs of 4 pulses */
 

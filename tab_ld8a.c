@@ -275,7 +275,7 @@ FLOAT hamwindow[L_WINDOW] = {        /* hamming-cosine window */
 
  -----------------------------------------------------*/
 
-FLOAT lwindow[MP1] = {          /* lag window for correlations */
+FLOAT lwindow[M+3] = {          /* lag window for correlations */
 WNC,
 (F)0.99889028,
 (F)0.99556851,
@@ -286,7 +286,9 @@ WNC,
 (F)0.94704735,
 (F)0.93140495,
 (F)0.91398895,
-(F)0.89490914
+(F)0.89490914,
+(F)0.87428580,
+(F)0.85221350
 };
 
 FLOAT lspcb1[NC0][M] = {
@@ -2479,6 +2481,10 @@ int  bitsno[PRM_SIZE] = {8,              /* MA + 1st stage */
                                8,1,  13,4, 7,  /* first subframe  */
                                5,    13,4, 7}; /* second subframe */
 
+int  bitsno2[4] = {1, /* SID Lsp : MA  */
+                     5, /* SID Lsp : 1st stage */
+                     4, /* SID Lsp : 2nd stage */
+                     5 };  /* SID gain */
 
         /* LSP Line spectral frequencies */
 

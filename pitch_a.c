@@ -36,7 +36,7 @@ int pitch_ol_fast(         /* output: open-loop pitch lag       */
 )
 {
     int  i, j;
-    int  T1, T2, T3;
+    int  T1=0, T2=0, T3=0;
     FLOAT  max1, max2, max3;
     FLOAT  *p, *p1, sum;
 
@@ -199,7 +199,7 @@ int pitch_fr3_fast(     /* output: integer part of pitch period        */
   int *pit_frac         /* output: chosen fraction                     */
 )
 {
-  int  t, t0;
+  int  t, t0=0;
   FLOAT  dn[L_SUBFR];
   FLOAT  exc_tmp[L_SUBFR];
   FLOAT  corr, max;

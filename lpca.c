@@ -220,7 +220,7 @@ void az_lsp(
  /* if not use the LSPs from previous frame */
 
  if ( nf < M)
-    for(i=0; i<M; i++)  lsp[i] = old_lsp[i];
+    copy(old_lsp, lsp, M);
 
  return;
 }

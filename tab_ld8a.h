@@ -14,7 +14,7 @@
 */
 
 extern FLOAT hamwindow[L_WINDOW];
-extern FLOAT lwindow[MP1];
+extern FLOAT lwindow[M+3];
 extern FLOAT lspcb1[NC0][M];
 extern FLOAT lspcb2[NC1][M];
 extern FLOAT fg[2][MA_NP][M];
@@ -38,5 +38,6 @@ extern FLOAT a100[3];
 extern FLOAT b140[3];
 extern FLOAT a140[3];
 extern int  bitsno[PRM_SIZE];
+extern int  bitsno2[4];
 extern FLOAT lsp_old[M];
 extern FLOAT past_qua_en[4];
