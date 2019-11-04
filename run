@@ -1,0 +1,4 @@
+make -f coder.mk clean coder
+./coder ALGTHM.IN ALGTHM.BTS 0
+make -f decoder.mk clean decoder
+./decoder ALGTHM.BIT ALGTHM.PTS
