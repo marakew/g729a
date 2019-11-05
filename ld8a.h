@@ -347,18 +347,18 @@ typedef struct encoder_state
 /*-------------------------------*
  * Pre and post-process functions*
  *-------------------------------*/
-void init_post_process(filter *f
+void init_post_process(filter *state
 );
 
-void post_process(filter *f,
+void post_process(filter *state,
    FLOAT signal[],      /* (i/o)  : signal           */
    int lg               /* (i)    : lenght of signal */
 );
 
-void init_pre_process(filter *f
+void init_pre_process(filter *state
 );
 
-void pre_process(filter *f,
+void pre_process(filter *state,
    FLOAT signal[],      /* (i/o)  : signal           */
    int lg               /* (i)    : lenght of signal */
 );

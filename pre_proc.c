@@ -38,16 +38,16 @@
  *-----------------------------------------------------------------------*/
 
 
-void init_pre_process(filter *f
+void init_pre_process(filter *state
 )
 {
-  f->x0 = f->x1 = (F)0.0;
-  f->y2 = f->y1 = (F)0.0;
+  state->x0 = state->x1 = (F)0.0;
+  state->y2 = state->y1 = (F)0.0;
 
   return;
 }
 
-void pre_process(filter *f,
+void pre_process(filter *state,
    FLOAT signal[],      /* (i/o)  : signal                     */
    int lg               /* (i)    : lenght of signal           */
 )
@@ -58,15 +58,15 @@ void pre_process(filter *f,
 
   for(i=0; i<lg; i++)
   {
-    x2 = f->x1;
-    f->x1 = f->x0;
-    f->x0 = signal[i];
+    x2 = state->x1;
+    state->x1 = state->x0;
+    state->x0 = signal[i];
 
-    y0 = f->y1*a140[1] + f->y2*a140[2] + f->x0*b140[0] + f->x1*b140[1] + x2*b140[2];
+    y0 = state->y1*a140[1] + state->y2*a140[2] + state->x0*b140[0] + state->x1*b140[1] + x2*b140[2];
 
     signal[i] = y0;
-    f->y2 = f->y1;
-    f->y1 = y0;
+    state->y2 = state->y1;
+    state->y1 = y0;
   }
 
   return;
