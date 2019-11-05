@@ -101,7 +101,7 @@ void lsf_lsp(
 {
     int     i;
     for ( i = 0; i < m; i++ )
-        lsp[i] = (FLOAT)cos((double)lsf[i]);
+        lsp[i] = (FLOAT)cos(lsf[i]);
     return;
 }
 
@@ -118,7 +118,7 @@ void lsp_lsf(
     int     i;
     
     for ( i = 0; i < m; i++ )
-        lsf[i] = (FLOAT)acos((double)lsp[i]);
+        lsf[i] = (FLOAT)acos(lsp[i]);
     return;
 }
 
