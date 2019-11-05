@@ -16,6 +16,7 @@
 /* lpc analysis routines                                                     */
 /*****************************************************************************/
 
+#include <math.h>
 #include "typedef.h"
 #include "ld8a.h"
 #include "tab_ld8a.h"
