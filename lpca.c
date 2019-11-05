@@ -33,7 +33,7 @@ void autocorr(
      FLOAT *r               /* output: auto-correlation vector r[0:M]*/
 )
 {
-   FLOAT y[L_WINDOW];  /* dynamic memory allocation is used in real time*/
+   FLOAT y[L_WINDOW];
    FLOAT sum;
    int i, j;
 
@@ -66,8 +66,13 @@ void lag_window(
 {
    int i;
 
+#if 1
    for (i=0; i<= m; i++)
      r[i] *= lwindow[i];
+#else
+   for (i=1; i<= m; i++)
+     r[i] *= lwindow[i-1];
+#enif
 
    return;
 }
@@ -80,12 +85,17 @@ void lag_window(
 FLOAT levinson(         /* output: prediction error (energy) */
  FLOAT *r,              /* input : auto correlation coefficients r[0:M] */
  FLOAT *a,              /* output: lpc coefficients a[0] = 1 */
- FLOAT *rc              /* output: reflection coefficients rc[0:M-1]    */
+ FLOAT *rc,             /* output: reflection coefficients rc[0:M-1]    */
+ FLOAT *old_A,          /* (i/o) : last stable filter LPC coefficients  */
+ FLOAT *old_rc          /* (i/o) : last stable filter Reflection coefficients.*/
 )
 {
    FLOAT s, at, err;
    int i, j, l;
 
+#if 1
+   if(r[1] > r[0]) r[1] = r[0];
+#endif
    rc[0] = (-r[1])/r[0];
    a[0] = (F)1.0;
    a[1] = rc[0];
@@ -95,7 +105,28 @@ FLOAT levinson(         /* output: prediction error (energy) */
      s = (F)0.0;
      for (j = 0; j < i; j++)
        s += r[i-j]*a[j];
+#if 1
      rc[i-1]= (-s)/(err);
+     if(err != 0.) {
+         rc[i-1]= (-s)/(err);
+     }
+     else rc[i-1] = (F)1.;
+        
+     /* Test for unstable filter. If unstable keep old A(z) */
+     if(fabs(rc[i-1]) > (F)0.999451) {
+         for(j=0; j<=M; j++) {
+             a[j] = old_A[j];
+         }
+         rc[0] = old_rc[0];        /* only two rc coefficients are needed */
+         rc[1] = old_rc[1];
+         return (F)0.001;
+     }
+#endif
+
+     /*------------------------------------------*
+      *  Compute new LPC coeff.                  *
+      *------------------------------------------*/
+
      for (j = 1; j <= (i/2); j++)
      {
        l = i-j;
@@ -108,6 +139,13 @@ FLOAT levinson(         /* output: prediction error (energy) */
      if (err <= (F)0.0)
         err = (F)0.001;
    }
+
+#if 0
+   copy(a, old_A, (M+1));
+   old_rc[0] = rc[0];
+   old_rc[1] = rc[1];
+#endif
+
    return (err);
 }
 

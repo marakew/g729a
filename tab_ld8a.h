@@ -14,7 +14,11 @@
 */
 
 extern FLOAT hamwindow[L_WINDOW];
+#if 1
 extern FLOAT lwindow[M+3];
+#else
+extern FLOAT lwindow[M+2];
+#endif
 extern FLOAT lspcb1[NC0][M];
 extern FLOAT lspcb2[NC1][M];
 extern FLOAT fg[2][MA_NP][M];

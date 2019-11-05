@@ -27,7 +27,7 @@
 #include "sid.h"
 
 /* Local functions */
-static void calc_pastfilt(enc_cng_state *state, FLOAT *Coeff);
+static void calc_pastfilt(enc_cng_state *state, FLOAT *Coeff, FLOAT old_A[],  FLOAT old_rc[]);
 static void calc_RCoeff(FLOAT *Coeff, FLOAT *RCoeff);
 static int cmp_filt(FLOAT *RCoeff, FLOAT *acf, FLOAT alpha, FLOAT Thresh);
 static void calc_sum_acf(FLOAT *acf, FLOAT *sum, int nb);
@@ -63,6 +63,8 @@ void cod_cng(
     FLOAT *exc,          /* (i/o) : excitation array                     */
     int pastVad,         /* (i)   : previous VAD decision                */
     FLOAT *lsp_old_q,    /* (i/o) : previous quantized lsp               */
+    FLOAT *old_A,        /* (i/o) : last stable filter LPC coefficients  */
+    FLOAT *old_rc,       /* (i/o) : last stable filter Reflection coefficients.*/
     FLOAT *Aq,           /* (o)   : set of interpolated LPC coefficients */
     int *ana,            /* (o)   : coded SID parameters                 */
     FLOAT freq_prev[MA_NP][M], /* (i/o) : previous LPS for quantization        */
@@ -92,7 +94,7 @@ void cod_cng(
         state->ener[0] = (F)0.;                /* should not happen */
     }
     else {
-        state->ener[0] = levinson(curAcf, curCoeff, bid);
+        state->ener[0] = levinson(curAcf, curCoeff, bid, old_A, old_rc);
     }
 
     /* if first frame of silence => SID frame */
@@ -138,7 +140,7 @@ void cod_cng(
         state->flag_chang = 0;
         
         /* Compute past average filter */
-        calc_pastfilt(state, state->pastCoeff);
+        calc_pastfilt(state, state->pastCoeff, old_A, old_rc);
         calc_RCoeff(state->pastCoeff, state->RCoeff);
         
         /* Compute stationarity of current filter   */
@@ -279,7 +281,7 @@ static int cmp_filt(FLOAT *RCoeff, FLOAT *acf, FLOAT alpha, FLOAT Thresh)
 
 /* Compute past average filter */
 /*******************************/
-static void calc_pastfilt(enc_cng_state *state, FLOAT *Coeff)
+static void calc_pastfilt(enc_cng_state *state, FLOAT *Coeff, FLOAT old_A[],  FLOAT old_rc[])
 {
     FLOAT s_sumAcf[MP1];
     FLOAT bid[M];
@@ -292,7 +294,7 @@ static void calc_pastfilt(enc_cng_state *state, FLOAT *Coeff)
         return;
     }
 
-    levinson(s_sumAcf, Coeff, bid);
+    levinson(s_sumAcf, Coeff, bid, old_A, old_rc);
     return;
 }
 

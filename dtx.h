@@ -24,6 +24,8 @@ void cod_cng(
   FLOAT *exc,          /* (i/o) : excitation array                     */
   int pastVad,         /* (i)   : previous VAD decision                */
   FLOAT *lsp_old_q,    /* (i/o) : previous quantized lsp               */
+  FLOAT *old_A,        /* (i/o) : last stable filter LPC coefficients  */
+  FLOAT *old_rc,       /* (i/o) : last stable filter Reflection coefficients.*/
   FLOAT *Aq,           /* (o)   : set of interpolated LPC coefficients */
   int *ana,            /* (o)   : coded SID parameters                 */
   FLOAT freq_prev[MA_NP][M],

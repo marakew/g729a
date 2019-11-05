@@ -117,6 +117,10 @@ void init_coder_ld8a(encoder_state *state)
    lsp_encw_reset(&state->lsp_state);
    init_exc_err(state->cng_state.exc_err);
 
+   set_zero(state->old_A, M+1);
+   state->old_A[0]= (F)1.;
+   set_zero(state->old_rc, 2);
+
    /* For G.729B */
    /* Initialize VAD/DTX parameters */
    state->seed = INIT_SEED;
@@ -206,7 +210,7 @@ void coder_ld8a(encoder_state *state,
      autocorr(state->p_window, NP, r);             /* Autocorrelations */
      copy(r, r_nbe, MP1);
      lag_window(NP, r);                     /* Lag windowing    */
-     levinson(r, Ap_t, rc);                /* Levinson Durbin  */
+     levinson(r, Ap_t, rc, state->old_A, state->old_rc);                /* Levinson Durbin  */
      az_lsp(Ap_t, lsp_new, state->lsp_old);       /* Convert A(z) to lsp */
 
      if (dtx_enable == 1)
@@ -224,7 +228,7 @@ void coder_ld8a(encoder_state *state,
     {
         //get_freq_prev(&state->lsp_state, &lsfq_mem[i][0], MA_NP);
         for (i=0; i<MA_NP; i++) copy(&state->lsp_state.freq_prev[i][0], &lsfq_mem[i][0], M);
-        cod_cng(&state->cng_state, state->exc, state->pastVad, state->lsp_old_q, Aq_t,
+        cod_cng(&state->cng_state, state->exc, state->pastVad, state->lsp_old_q, state->old_A, state->old_rc, Aq_t,
                         ana, lsfq_mem, &state->seed);
 
         //update_freq_prev(&state->lsp_state, &lsfq_mem[i][0], MA_NP);

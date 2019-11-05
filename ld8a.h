@@ -322,6 +322,10 @@ typedef struct encoder_state
   FLOAT  mem_w0[M], mem_w[M], mem_zero[M];
   FLOAT  sharp;
 
+	/* Last A(z) for case of unstable filter */
+  FLOAT old_A[M+1];
+  FLOAT old_rc[2];
+
   /* For G.729B */
   /* DTX variables */
   int pastVad;
@@ -388,7 +392,7 @@ void  autocorr(FLOAT *x, int m, FLOAT *r);
 
 void  lag_window(int m, FLOAT r[]);
 
-FLOAT levinson(FLOAT *a, FLOAT *r, FLOAT *r_c);
+FLOAT levinson(FLOAT *a, FLOAT *r, FLOAT *r_c, FLOAT *old_A, FLOAT *old_rc);
 
 void  az_lsp(FLOAT *a, FLOAT *lsp, FLOAT *old_lsp);
 
