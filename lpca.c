@@ -72,7 +72,7 @@ void lag_window(
 #else
    for (i=1; i<= m; i++)
      r[i] *= lwindow[i-1];
-#enif
+#endif
 
    return;
 }
