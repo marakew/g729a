@@ -93,7 +93,7 @@ FLOAT levinson(         /* output: prediction error (energy) */
    FLOAT s, at, err;
    int i, j, l;
 
-#if 1
+#if 0
    if(r[1] > r[0]) r[1] = r[0];
 #endif
    rc[0] = (-r[1])/r[0];
@@ -105,8 +105,9 @@ FLOAT levinson(         /* output: prediction error (energy) */
      s = (F)0.0;
      for (j = 0; j < i; j++)
        s += r[i-j]*a[j];
-#if 1
+#if 0
      rc[i-1]= (-s)/(err);
+#else
      if(err != 0.) {
          rc[i-1]= (-s)/(err);
      }
@@ -114,9 +115,7 @@ FLOAT levinson(         /* output: prediction error (energy) */
         
      /* Test for unstable filter. If unstable keep old A(z) */
      if(fabs(rc[i-1]) > (F)0.999451) {
-         for(j=0; j<=M; j++) {
-             a[j] = old_A[j];
-         }
+         copy(old_A, a, (M+1));
          rc[0] = old_rc[0];        /* only two rc coefficients are needed */
          rc[1] = old_rc[1];
          return (F)0.001;
