@@ -381,8 +381,8 @@ void  decod_ld8a(decoder_state *state,
                                   parm[0] = bad frame indicator (bfi)  */
   FLOAT   synth[],     /* (o)   : synthesis speech                     */
   FLOAT   A_t[],       /* (o)   : decoded LP filter in 2 subframes     */
-  int *T2,              /* (o)   : decoded pitch lag in 2 subframes     */
-  int    *Vad          /* output: decoded frame type                    */
+  int *T2,             /* (o)   : decoded pitch lag in 2 subframes     */
+  int    *Vad          /* (o)   : decoded frame type                   */
 );
 
 /*-------------------------------*
@@ -613,8 +613,8 @@ void post_filter(
   post_filter_state *state,
   FLOAT *syn,     /* in/out: synthesis speech (postfiltered is output)    */
   FLOAT *a_t,     /* input : interpolated LPC parameters in all subframes */
-  int *T,          /* input : decoded pitch lags in all subframes          */
-  int Vad        /* input : decoded frame type                    */
+  int *T,         /* input : decoded pitch lags in all subframes          */
+  int Vad         /* input : decoded frame type                    */
 );
 
 /*------------------------------------------------------------*
