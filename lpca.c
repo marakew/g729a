@@ -106,7 +106,7 @@ FLOAT levinson(         /* output: prediction error (energy) */
      s = (F)0.0;
      for (j = 0; j < i; j++)
        s += r[i-j]*a[j];
-#if 0
+#if 1
      rc[i-1]= (-s)/(err);
 #else
      if(err != 0.) {
